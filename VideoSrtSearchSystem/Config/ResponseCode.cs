@@ -18,6 +18,11 @@
         public const string PARAMETER_FORMAT_ERROR = "2002";
 
         /// <summary>
+        /// 找不到檔案
+        /// </summary>
+        public const string FILE_NOT_FOUND = "2003";
+
+        /// <summary>
         /// 通用失敗回傳
         /// </summary>
         public const string FAIL = "9999";

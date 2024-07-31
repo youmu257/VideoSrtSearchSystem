@@ -6,7 +6,7 @@ namespace VideoSrtSearchSystem.Tool.MySQL
     {
         public MySqlConnection GetNormalCotext()
         {
-            return new MySqlConnection(_configuration["ConnectionStrings:localhost"]);
+            return new MySqlConnection(_configuration["ConnectionStrings:Default"]);
         }
     }
 }

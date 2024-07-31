@@ -1,6 +1,8 @@
 using Serilog;
 using VideoSrtSearchSystem.Config;
-using VideoSrtSearchSystem.Repository;
+using VideoSrtSearchSystem.Repository.LiveStraming;
+using VideoSrtSearchSystem.Repository.Srt;
+using VideoSrtSearchSystem.Services.Srt;
 using VideoSrtSearchSystem.Tool;
 using VideoSrtSearchSystem.Tool.Language;
 using VideoSrtSearchSystem.Tool.MySQL;
@@ -33,10 +35,16 @@ builder.Services.AddLogging(loggingBuilder =>
 #region Tool 依賴注入
 builder.Services.AddTransient<IMySQLConnectionProvider, MySQLConnectionProvider>();
 builder.Services.AddSingleton<IVoiceFileTool, VoiceFileTool>();
+builder.Services.AddSingleton<IMySqlTool, MySqlTool>();
+#endregion
+
+#region Service 依賴注入
+builder.Services.AddTransient<ISrtService, SrtService>();
 #endregion
 
 #region Repository 依賴注入
 builder.Services.AddTransient<ILiveStreamingRepository, LiveStreamingRepository>();
+builder.Services.AddTransient<ILiveStreamingSrtRepository, LiveStreamingSrtRepository>();
 #endregion
 
 
@@ -63,7 +71,6 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
-    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self' *.spkita.com;");
     context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
 
