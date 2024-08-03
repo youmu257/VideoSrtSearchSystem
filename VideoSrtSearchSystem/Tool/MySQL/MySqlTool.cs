@@ -61,6 +61,48 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             return model;
         }
 
+        public List<T> SelectMany<T>(MySqlConnection? connection, Query query) where T : BaseModel, new()
+        {
+            var compiler = new MySqlCompiler();
+            var compiledQuery = compiler.Compile(query);
+            return SelectMany<T>(connection, compiledQuery.Sql, compiledQuery.NamedBindings);
+        }
+
+        public List<T> SelectMany<T>(MySqlConnection? connection, string query, Dictionary<string, object>? parameters = null) where T : BaseModel, new()
+        {
+            bool nullConnection = connection == null;
+            if (nullConnection)
+            {
+                connection = _mySQLConnectionProvider.GetNormalCotext();
+            }
+            connection!.Open();
+            List<T> list = new();
+            using (var command = new MySqlCommand(query, connection))
+            {
+                if (parameters is not null)
+                {
+                    foreach (var item in parameters)
+                    {
+                        command.Parameters.AddWithValue(item.Key, item.Value);
+                    }
+                }
+                using (var dr = command.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        T model = new T();
+                        model.Set(dr);
+                        list.Add(model);
+                    }
+                }
+            }
+            if (nullConnection)
+            {
+                connection.Close();
+            }
+            return list;
+        }
+
         public uint Insert(MySqlConnection connection, MySqlTransaction trans, Query query)
         {
             SqlResult sqlResult = new MySqlCompiler().Compile(query);

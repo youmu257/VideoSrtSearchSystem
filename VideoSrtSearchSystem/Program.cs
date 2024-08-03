@@ -3,7 +3,7 @@ using VideoSrtSearchSystem.Config;
 using VideoSrtSearchSystem.Repository.LiveStraming;
 using VideoSrtSearchSystem.Repository.Srt;
 using VideoSrtSearchSystem.Services.Srt;
-using VideoSrtSearchSystem.Tool;
+using VideoSrtSearchSystem.Services.Video;
 using VideoSrtSearchSystem.Tool.Language;
 using VideoSrtSearchSystem.Tool.MySQL;
 
@@ -34,17 +34,17 @@ builder.Services.AddLogging(loggingBuilder =>
 #endregion
 #region Tool 依賴注入
 builder.Services.AddTransient<IMySQLConnectionProvider, MySQLConnectionProvider>();
-builder.Services.AddSingleton<IVoiceFileTool, VoiceFileTool>();
 builder.Services.AddSingleton<IMySqlTool, MySqlTool>();
 #endregion
 
 #region Service 依賴注入
-builder.Services.AddTransient<ISrtService, SrtService>();
+builder.Services.AddSingleton<ISrtService, SrtService>();
+builder.Services.AddSingleton<IVideoService, VideoService>();
 #endregion
 
 #region Repository 依賴注入
-builder.Services.AddTransient<ILiveStreamingRepository, LiveStreamingRepository>();
-builder.Services.AddTransient<ILiveStreamingSrtRepository, LiveStreamingSrtRepository>();
+builder.Services.AddSingleton<ILiveStreamingRepository, LiveStreamingRepository>();
+builder.Services.AddSingleton<ILiveStreamingSrtRepository, LiveStreamingSrtRepository>();
 #endregion
 
 

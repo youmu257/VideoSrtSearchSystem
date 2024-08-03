@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using VideoSrtSearchSystem.Config;
 using VideoSrtSearchSystem.DTO.Request.Srt;
 using VideoSrtSearchSystem.Services.Srt;
+using VideoSrtSearchSystem.Tool.Language;
 
 namespace VideoSrtSearchSystem.Controllers
 {
     [ApiController]
-    [Route("srt")]
+    [Route("api/srt")]
     public class SrtController(
         ISrtService _srtService,
         ILogger<SrtController> _logger) : BaseController<SrtController>(_logger)
@@ -30,7 +32,7 @@ namespace VideoSrtSearchSystem.Controllers
                 }
 
                 _srtService.ImportSrt(request);
-                return Ok();
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"));
             }
             catch (Exception ex)
             {
