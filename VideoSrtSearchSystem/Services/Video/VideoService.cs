@@ -12,19 +12,25 @@ namespace VideoSrtSearchSystem.Services.Video
     ) : IVideoService
     {
         private static readonly int pageSize = 25;
-        public List<GetAllVideoResponse> GetAllVideo(GetAllVideoRequest request)
+
+        public GetAllVideoResponse GetAllVideo(GetAllVideoRequest request)
         {
             try
             {
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
                 // 取得影片列表
                 var liveStramingList = _liveStreamingRepository.GetAll(request.Keyword, request.Page - 1, pageSize, connection);
-                return liveStramingList.Select(item => new GetAllVideoResponse
+                var totalCount = _liveStreamingRepository.GetCount(connection);
+                return new GetAllVideoResponse
                 {
-                    VideoGuid = item.ls_guid,
-                    VideoTitle = item.ls_title,
-                    VideoUrl = item.ls_url,
-                }).ToList();
+                    TotalPage = (int)Math.Ceiling((double)totalCount / pageSize),
+                    VideoList = liveStramingList.Select(item => new VideoResponse
+                    {
+                        VideoGuid = item.ls_guid,
+                        VideoTitle = item.ls_title,
+                        VideoUrl = item.ls_url,
+                    }).ToList()
+                };
             }
             catch (Exception ex)
             {

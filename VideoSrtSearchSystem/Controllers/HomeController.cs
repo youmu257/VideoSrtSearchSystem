@@ -1,46 +1,31 @@
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using System.Diagnostics;
+using VideoSrtSearchSystem.DTO.Request.Video;
+using VideoSrtSearchSystem.DTO.Response.Video;
 using VideoSrtSearchSystem.Models;
-using VideoSrtSearchSystem.Models.LiveStraming;
+using VideoSrtSearchSystem.Services.Video;
 
 namespace VideoSrtSearchSystem.Controllers
 {
     //[EnableCors("AllOpen")]
     [ApiController]
-    [Route("home")]
-    public class HomeController(IConfiguration _configuration, ILogger<HomeController> _logger) : Controller
+    [Route("")]
+    public class HomeController(
+        IVideoService _videoService,
+        ILogger<HomeController> _logger
+    ) : Controller
     {
         [HttpGet]
-        [Route("index")]
-        public IActionResult Index()
+        public IActionResult Index(int page = 1)
         {
-            List<LiveStreamingModel> list = new List<LiveStreamingModel>();
-            using (MySqlConnection connection = new MySqlConnection(_configuration["ConnectionStrings:localhost"]))
+            var request = new GetAllVideoRequest
             {
-                try
-                {
-                    connection.Open();
-                    Console.WriteLine("Connection successful!");
-
-                    string query = $"SELECT * FROM {LiveStreamingModel.TableName}";
-
-                    MySqlCommand command = new MySqlCommand(query, connection);
-
-                    using (MySqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            list.Add(new LiveStreamingModel(reader));
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An error occurred: {ex.Message}");
-                }
-            }
-            _logger.LogInformation(_configuration["aaa"]);
+                Page = page,
+            };
+            var videoResponse = _videoService.GetAllVideo(request);
+            ViewData["VideoList"] = videoResponse.VideoList;
+            ViewData["TotalPage"] = videoResponse.TotalPage;
             return View();
         }
 

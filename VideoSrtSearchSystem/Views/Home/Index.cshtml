@@ -1,0 +1,47 @@
+﻿@using VideoSrtSearchSystem.DTO.Response.Video
+@{
+    ViewData["Title"] = "查詢主頁";
+    var items = ViewData.ContainsKey("VideoList") ? ViewData["VideoList"] as List<VideoResponse> : new List<VideoResponse>();
+    var totalPages = ViewData.ContainsKey("TotalPage") ? Int32.Parse(ViewData["TotalPage"]!.ToString()!) : 1;
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <ul class="list-group">
+        @if (items != null)
+        {
+            foreach (var item in items)
+            {
+                <li class="list-group-item">
+                    <strong>@item.VideoTitle</strong>: <a href="@item.VideoUrl">@item.VideoUrl</a>
+                </li>
+            }
+        }
+        else
+        {
+            <li>No items available.</li>
+        }
+    </ul>
+    <nav aria-label="Page navigation" class="pagination-wrapper">
+        <ul class="pagination">
+            <li page-item>
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li page-item>
+                    <a class="page-link" asp-page="" asp-route-page="@i">
+                        @i
+                    </a>
+                </li>
+            }
+            <li page-item>
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>

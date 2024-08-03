@@ -34,7 +34,10 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             {
                 connection = _mySQLConnectionProvider.GetNormalCotext();
             }
-            connection!.Open();
+            if (connection!.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
             T model = new();
             using (var command = new MySqlCommand(query, connection))
             {
@@ -61,6 +64,49 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             return model;
         }
 
+        public int Count(MySqlConnection? connection, Query query)
+        {
+            var compiler = new MySqlCompiler();
+            var compiledQuery = compiler.Compile(query);
+            var result = SelectOneRaw(connection, compiledQuery.Sql, compiledQuery.NamedBindings);
+            return Convert.ToInt32(result.FirstOrDefault().Value);
+        }
+
+        public Dictionary<string, object> SelectOneRaw(MySqlConnection? connection, Query query)
+        {
+            var compiler = new MySqlCompiler();
+            var compiledQuery = compiler.Compile(query);
+            return SelectOneRaw(connection, compiledQuery.Sql, compiledQuery.NamedBindings);
+        }
+
+        public Dictionary<string, object> SelectOneRaw(MySqlConnection? connection, string query, Dictionary<string, object>? parameters = null)
+        {
+            if (connection == null)
+            {
+                connection = _mySQLConnectionProvider.GetNormalCotext();
+            }
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+            using (var command = new MySqlCommand(query, connection))
+            {
+                AddParametersToCommand(command, parameters);
+                using (var dr = command.ExecuteReader())
+                {
+                    var model = new Dictionary<string, object>();
+                    if (dr.Read())
+                    {
+                        for (var i = 0; i < dr.FieldCount; i++)
+                        {
+                            model.Add(dr.GetName(i), dr.GetValue(i));
+                        }
+                    }
+                    return model;
+                }
+            }
+        }
+
         public List<T> SelectMany<T>(MySqlConnection? connection, Query query) where T : BaseModel, new()
         {
             var compiler = new MySqlCompiler();
@@ -75,7 +121,10 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             {
                 connection = _mySQLConnectionProvider.GetNormalCotext();
             }
-            connection!.Open();
+            if (connection!.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
             List<T> list = new();
             using (var command = new MySqlCommand(query, connection))
             {

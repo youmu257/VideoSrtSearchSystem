@@ -5,6 +5,6 @@ namespace VideoSrtSearchSystem.Services.Video
 {
     public interface IVideoService
     {
-        List<GetAllVideoResponse> GetAllVideo(GetAllVideoRequest request);
+        GetAllVideoResponse GetAllVideo(GetAllVideoRequest request);
     }
 }

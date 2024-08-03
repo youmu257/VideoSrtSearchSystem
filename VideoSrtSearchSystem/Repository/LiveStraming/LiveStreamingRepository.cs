@@ -34,6 +34,24 @@ namespace VideoSrtSearchSystem.Repository.LiveStraming
             }
         }
 
+        public int GetCount(MySqlConnection? connection = null)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingModel.ls_id),
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .AsCount(cols);
+                return _mySqlTool.Count(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public LiveStreamingModel GetByUrl(string url, MySqlConnection? connection = null)
         {
             try
