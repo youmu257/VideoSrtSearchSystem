@@ -12,6 +12,9 @@ namespace VideoSrtSearchSystem.Controllers
         ISrtService _srtService,
         ILogger<SrtController> _logger) : BaseController<SrtController>(_logger)
     {
+        /// <summary>
+        /// 匯入字幕
+        /// </summary>
         [HttpPost]
         [Route("import")]
         public IActionResult ImportSrt(ImportSrtRequest request)
@@ -40,5 +43,27 @@ namespace VideoSrtSearchSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// 查詢字幕功能
+        /// </summary>
+        [HttpGet]
+        [Route("search")]
+        public IActionResult SearchSrt([FromQuery] SearchSrtRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Keyword))
+                {
+                    return ParameterIsRequired("Keyword");
+                }
+
+                var response = _srtService.SearchSrt(request.Keyword, request.Page);
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), response);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResponse(ex);
+            }
+        }
     }
 }

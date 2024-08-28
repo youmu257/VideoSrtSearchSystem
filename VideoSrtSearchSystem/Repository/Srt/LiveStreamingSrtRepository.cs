@@ -39,5 +39,44 @@ namespace VideoSrtSearchSystem.Repository.Srt
                 throw;
             }
         }
+
+        public List<TwoModelData<LiveStreamingModel, LiveStreamingSrtModel>> GetByLikeKeyword(string keyword, int page, int pageSize, MySqlConnection connection)
+        {
+            try
+            {
+                var subcols = new string[]
+                {
+                    nameof(LiveStreamingModel.ls_id),
+                    nameof(LiveStreamingModel.ls_title),
+                };
+                var subQuery = new Query(LiveStreamingSrtModel.TableName)
+                    .Join(LiveStreamingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingSrtModel.lss_ls_id))
+                    .WhereLike(nameof(LiveStreamingSrtModel.lss_text), $"%{keyword}%")
+                    .OrderBy(nameof(LiveStreamingModel.ls_createtime))
+                    .Offset((page -1) * pageSize)
+                    .Limit(pageSize)
+                    .Select(subcols)
+                    .Distinct();
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingModel.ls_title),
+                    nameof(LiveStreamingSrtModel.lss_text),
+                    nameof(LiveStreamingSrtModel.lss_start),
+                    nameof(LiveStreamingSrtModel.lss_end),
+                };
+                var query = new Query(LiveStreamingSrtModel.TableName)
+                    .Join(
+                        subQuery.As("A"),
+                        q => q.On(nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingSrtModel.lss_ls_id))
+                    )
+                    .WhereLike(nameof(LiveStreamingSrtModel.lss_text), $"%{keyword}%")
+                    .Select(cols);
+                return _mySqlTool.SelectMany<LiveStreamingModel, LiveStreamingSrtModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

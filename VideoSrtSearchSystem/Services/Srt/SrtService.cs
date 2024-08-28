@@ -2,6 +2,7 @@
 using System.Text;
 using VideoSrtSearchSystem.Config;
 using VideoSrtSearchSystem.DTO.Request.Srt;
+using VideoSrtSearchSystem.DTO.Response.Srt;
 using VideoSrtSearchSystem.Exceptions;
 using VideoSrtSearchSystem.Models.LiveStraming;
 using VideoSrtSearchSystem.Repository.LiveStraming;
@@ -19,6 +20,7 @@ namespace VideoSrtSearchSystem.Services.Srt
     ) : ISrtService
     {
         private readonly string outputDirectory = Path.Combine(appEnvironment.WebRootPath, "output");
+        private readonly int _searchPageSize = 20;
 
         public void ImportSrt(ImportSrtRequest request)
         {
@@ -74,6 +76,46 @@ namespace VideoSrtSearchSystem.Services.Srt
                         trans.Rollback();
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        public List<SearchSrtResponse> SearchSrt(string keyword, int page)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 查詢影片字幕
+                var srtList = _liveStreamingSrtRepository.GetByLikeKeyword(keyword, page, _searchPageSize, connection);
+                Dictionary<string, SearchSrtResponse> srtDict = new Dictionary<string, SearchSrtResponse>();
+                foreach (var srtModel in srtList)
+                {
+                    string title = srtModel.ModelK!.ls_title;
+                    var srtData = new SrtResponse
+                    {
+                        Context = srtModel.ModelV!.lss_text,
+                        SrtStartTime = srtModel.ModelV!.lss_start,
+                        SrtEndTime = srtModel.ModelV!.lss_end,
+                    };
+                    if (srtDict.ContainsKey(title) == false)
+                    {
+                        srtDict.Add(title, new SearchSrtResponse
+                        {
+                            VideoTitle = title,
+                            SrtList = new List<SrtResponse>
+                            {
+                                srtData
+                            }
+                        });
+                        continue;
+                    }
+                    srtDict[title].SrtList.Add(srtData);
+                }
+                return srtDict.Values.ToList();
             }
             catch (Exception ex)
             {

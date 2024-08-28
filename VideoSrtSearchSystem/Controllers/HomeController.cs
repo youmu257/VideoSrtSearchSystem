@@ -11,10 +11,7 @@ namespace VideoSrtSearchSystem.Controllers
     //[EnableCors("AllOpen")]
     [ApiController]
     [Route("")]
-    public class HomeController(
-        IVideoService _videoService,
-        ILogger<HomeController> _logger
-    ) : Controller
+    public class HomeController(IVideoService _videoService) : Controller
     {
         [HttpGet]
         public IActionResult Index(int page = 1)

@@ -152,6 +152,57 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             return list;
         }
 
+        public List<TwoModelData<K, V>> SelectMany<K, V>(MySqlConnection? connection, Query query)
+            where K : BaseModel, new()
+            where V : BaseModel, new()
+        {
+            var compiler = new MySqlCompiler();
+            var compiledQuery = compiler.Compile(query);
+            return SelectMany<K, V>(connection, compiledQuery.Sql, compiledQuery.NamedBindings);
+        }
+
+        public List<TwoModelData<K, V>> SelectMany<K, V>(MySqlConnection? connection, string query, Dictionary<string, object>? parameters = null)
+            where K : BaseModel, new()
+            where V : BaseModel, new()
+        {
+            bool nullConnection = connection == null;
+            if (nullConnection)
+            {
+                connection = _mySQLConnectionProvider.GetNormalCotext();
+            }
+            if (connection!.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+            List<TwoModelData<K, V>> list = new();
+            using (var command = new MySqlCommand(query, connection))
+            {
+                if (parameters is not null)
+                {
+                    foreach (var item in parameters)
+                    {
+                        command.Parameters.AddWithValue(item.Key, item.Value);
+                    }
+                }
+                using (var dr = command.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        K modelK = new K();
+                        V modelV = new V();
+                        modelK.Set(dr);
+                        modelV.Set(dr);
+                        list.Add(new TwoModelData<K, V>(modelK, modelV));
+                    }
+                }
+            }
+            if (nullConnection)
+            {
+                connection.Close();
+            }
+            return list;
+        }
+
         public uint Insert(MySqlConnection connection, MySqlTransaction trans, Query query)
         {
             SqlResult sqlResult = new MySqlCompiler().Compile(query);

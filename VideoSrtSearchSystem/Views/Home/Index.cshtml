@@ -1,19 +1,25 @@
 ﻿@using VideoSrtSearchSystem.DTO.Response.Video
 @{
-    ViewData["Title"] = "查詢主頁";
+    ViewData["Title"] = "影片查詢主頁";
     var items = ViewData.ContainsKey("VideoList") ? ViewData["VideoList"] as List<VideoResponse> : new List<VideoResponse>();
     var totalPages = ViewData.ContainsKey("TotalPage") ? Int32.Parse(ViewData["TotalPage"]!.ToString()!) : 1;
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
+    <h1 class="display-4"></h1>
     <ul class="list-group">
         @if (items != null)
         {
             foreach (var item in items)
             {
-                <li class="list-group-item">
-                    <strong>@item.VideoTitle</strong>: <a href="@item.VideoUrl">@item.VideoUrl</a>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@item.VideoTitle</strong>:
+                        <a href="@item.VideoUrl">@item.VideoUrl</a>
+                    </div>
+                    <div>
+                        <a href="/edit?guid=@item.VideoGuid" class="btn btn-primary btn-sm">編輯</a>
+                    </div>
                 </li>
             }
         }
