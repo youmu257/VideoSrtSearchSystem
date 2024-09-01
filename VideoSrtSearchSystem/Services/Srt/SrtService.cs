@@ -7,6 +7,7 @@ using VideoSrtSearchSystem.Exceptions;
 using VideoSrtSearchSystem.Models.LiveStraming;
 using VideoSrtSearchSystem.Repository.LiveStraming;
 using VideoSrtSearchSystem.Repository.Srt;
+using VideoSrtSearchSystem.Tool;
 using VideoSrtSearchSystem.Tool.MySQL;
 
 namespace VideoSrtSearchSystem.Services.Srt
@@ -16,6 +17,7 @@ namespace VideoSrtSearchSystem.Services.Srt
         ILiveStreamingSrtRepository _liveStreamingSrtRepository,
         IMySQLConnectionProvider _mySQLConnectionProvider,
         ILogger<SrtService> _logger,
+        ICommonTool _commonTool,
         IWebHostEnvironment appEnvironment
     ) : ISrtService
     {
@@ -84,28 +86,31 @@ namespace VideoSrtSearchSystem.Services.Srt
             }
         }
 
-        public List<SearchSrtResponse> SearchSrt(string keyword, int page)
+        public SearchSrtResponse SearchSrt(string keyword, int page)
         {
             try
             {
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
                 // 查詢影片字幕
                 var srtList = _liveStreamingSrtRepository.GetByLikeKeyword(keyword, page, _searchPageSize, connection);
-                Dictionary<string, SearchSrtResponse> srtDict = new Dictionary<string, SearchSrtResponse>();
+                var srtDict = new Dictionary<string, SearchSrtVideoResponse>();
                 foreach (var srtModel in srtList)
                 {
-                    string title = srtModel.ModelK!.ls_title;
+                    string videoGuid = srtModel.ModelK!.ls_guid.Replace("-", "");
                     var srtData = new SrtResponse
                     {
                         Context = srtModel.ModelV!.lss_text,
+                        SrtStartTimeSeconds = (int)TimeSpan.Parse(srtModel.ModelV!.lss_start).TotalSeconds,
                         SrtStartTime = srtModel.ModelV!.lss_start,
                         SrtEndTime = srtModel.ModelV!.lss_end,
                     };
-                    if (srtDict.ContainsKey(title) == false)
+                    if (srtDict.ContainsKey(videoGuid) == false)
                     {
-                        srtDict.Add(title, new SearchSrtResponse
+                        srtDict.Add(videoGuid, new SearchSrtVideoResponse
                         {
-                            VideoTitle = title,
+                            VideoTitle = srtModel.ModelK!.ls_title,
+                            VideoGuid = videoGuid,
+                            VideoUrl = srtModel.ModelK!.ls_url,
                             SrtList = new List<SrtResponse>
                             {
                                 srtData
@@ -113,9 +118,15 @@ namespace VideoSrtSearchSystem.Services.Srt
                         });
                         continue;
                     }
-                    srtDict[title].SrtList.Add(srtData);
+                    srtDict[videoGuid].SrtList.Add(srtData);
                 }
-                return srtDict.Values.ToList();
+                // 取得查詢總數量
+                var totalCount = _liveStreamingSrtRepository.GetTotalPageByLikeKeyword(keyword, connection);
+                return new SearchSrtResponse
+                {
+                    TotalPage = _commonTool.GetTotalPage(totalCount, _searchPageSize),
+                    VideoList = srtDict.Values.ToList(),
+                };
             }
             catch (Exception ex)
             {

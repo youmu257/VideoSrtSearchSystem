@@ -1,6 +1,7 @@
 ﻿using VideoSrtSearchSystem.DTO.Request.Video;
 using VideoSrtSearchSystem.DTO.Response.Video;
 using VideoSrtSearchSystem.Repository.LiveStraming;
+using VideoSrtSearchSystem.Tool;
 using VideoSrtSearchSystem.Tool.MySQL;
 
 namespace VideoSrtSearchSystem.Services.Video
@@ -8,6 +9,7 @@ namespace VideoSrtSearchSystem.Services.Video
     public class VideoService(
         ILiveStreamingRepository _liveStreamingRepository,
         IMySQLConnectionProvider _mySQLConnectionProvider,
+        ICommonTool _commonTool,
         ILogger<VideoService> _logger
     ) : IVideoService
     {
@@ -23,7 +25,7 @@ namespace VideoSrtSearchSystem.Services.Video
                 var totalCount = _liveStreamingRepository.GetCount(connection);
                 return new GetAllVideoResponse
                 {
-                    TotalPage = (int)Math.Ceiling((double)totalCount / pageSize),
+                    TotalPage = _commonTool.GetTotalPage(totalCount, pageSize),
                     VideoList = liveStramingList.Select(item => new VideoResponse
                     {
                         VideoGuid = item.ls_guid,

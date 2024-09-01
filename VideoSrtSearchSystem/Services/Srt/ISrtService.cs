@@ -6,6 +6,6 @@ namespace VideoSrtSearchSystem.Services.Srt
     public interface ISrtService
     {
         void ImportSrt(ImportSrtRequest request);
-        List<SearchSrtResponse> SearchSrt(string keyword, int page);
+        SearchSrtResponse SearchSrt(string keyword, int page);
     }
 }

@@ -1,0 +1,81 @@
+﻿@using VideoSrtSearchSystem.DTO.Response.Srt
+@using VideoSrtSearchSystem.DTO.Response.Video
+@{
+    // https://bbbootstrap.com/snippets/bootstrap-search-box-input-icons-inside-88211241
+    List<SearchSrtVideoResponse> VideoList = ViewData["VideoList"] as List<SearchSrtVideoResponse>;
+    string keyword = ViewData["Keyword"] as string;
+    int page = ViewData["Page"] == null ? 1 : (int)ViewData["Page"];
+    int totalPage = ViewData["TotalPage"] == null ? 1 : (int)ViewData["TotalPage"];
+}
+<div class="container">
+    <div class="row height d-flex justify-content-center align-items-center">
+        <div class="col-md-8">
+            <div class="search">
+                <i class="fa fa-search"></i>
+                <input type="text" id="searchQuery" class="form-control" placeholder="查詢關鍵字" value="@keyword">
+                <button class="btn btn-primary" onclick="redirectToSearchResults()">Search</button>
+            </div>
+        </div>
+    </div>
+    @if (VideoList != null && VideoList.Count() > 0)
+    {
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div id="searchResults">
+                    @foreach (var item in VideoList)
+                    {
+                        var collapseId = "collapse_" + item.VideoGuid;
+                        <p>
+                            <a class="btn btn-primary" data-bs-toggle="collapse" href="#@collapseId" role="button" aria-expanded="false" aria-controls="@collapseId">
+                                @item.VideoTitle
+                            </a>
+                            <!-- 在按鈕旁邊添加一個連結 -->
+                            <a href="@item.VideoUrl" class="btn btn-link" target="_blank">觀看影片</a>
+                        </p>
+                        <div class="collapse" id="@collapseId">
+                            <div class="list-group">
+                                @foreach (var srtObj in item.SrtList)
+                                {
+                                    var url = $"{item.VideoUrl}&t={srtObj.SrtStartTimeSeconds.ToString()}s";
+                                    <div class="list-group-item">
+                                        <a class="mb-1" href="@url" target="_blank">@srtObj.SrtStartTime - @srtObj.SrtEndTime</a>
+                                        <p class="mb-1">@srtObj.Context</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    <nav aria-label="Page navigation" class="pagination-wrapper">
+        <ul class="pagination">
+            <li page-item>
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (int i = 1; i <= totalPage; i++)
+            {
+                <li page-item>
+                    <a class="page-link" asp-page="" asp-route-page="@i">
+                        @i
+                    </a>
+                </li>
+            }
+            <li page-item>
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+<script type="text/javascript">
+    function redirectToSearchResults() {
+        var query = document.getElementById("searchQuery").value;
+        var encodedQuery = encodeURIComponent(query);
+        window.location.href = 'srtSearch?keyword=' + encodedQuery;
+    }
+</script>

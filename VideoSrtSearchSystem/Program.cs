@@ -4,6 +4,7 @@ using VideoSrtSearchSystem.Repository.LiveStraming;
 using VideoSrtSearchSystem.Repository.Srt;
 using VideoSrtSearchSystem.Services.Srt;
 using VideoSrtSearchSystem.Services.Video;
+using VideoSrtSearchSystem.Tool;
 using VideoSrtSearchSystem.Tool.Language;
 using VideoSrtSearchSystem.Tool.MySQL;
 
@@ -35,6 +36,7 @@ builder.Services.AddLogging(loggingBuilder =>
 #region Tool 依賴注入
 builder.Services.AddTransient<IMySQLConnectionProvider, MySQLConnectionProvider>();
 builder.Services.AddSingleton<IMySqlTool, MySqlTool>();
+builder.Services.AddSingleton<ICommonTool, CommonTool>();
 #endregion
 
 #region Service 依賴注入

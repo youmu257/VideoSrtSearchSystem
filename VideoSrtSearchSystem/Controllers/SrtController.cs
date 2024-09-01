@@ -58,7 +58,7 @@ namespace VideoSrtSearchSystem.Controllers
                 }
 
                 var response = _srtService.SearchSrt(request.Keyword, request.Page);
-                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), response);
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), response.VideoList);
             }
             catch (Exception ex)
             {

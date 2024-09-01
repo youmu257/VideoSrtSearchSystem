@@ -1,6 +1,5 @@
 ﻿using MySqlConnector;
 using SqlKata;
-using SqlKata.Compilers;
 
 namespace VideoSrtSearchSystem.Tool.MySQL
 {
