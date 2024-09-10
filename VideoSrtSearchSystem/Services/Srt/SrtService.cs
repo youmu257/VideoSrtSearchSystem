@@ -45,13 +45,13 @@ namespace VideoSrtSearchSystem.Services.Srt
                 using (var fileStream = File.OpenRead(request.SrtPath))
                 {
                     var items = parser.ParseStream(fileStream, Encoding.UTF8);
-                    uint index = 0;
+                    uint index = 1;
                     var insertSrtList = items.Select(item => new LiveStreamingSrtModel
                     {
                         lss_ls_id = liveStramingModel.ls_id,
                         lss_num = index++,
-                        lss_start = TimeSpan.FromMilliseconds(item.StartTime).ToString(@"hh\:mm\:ss\.fff"),
-                        lss_end = TimeSpan.FromMilliseconds(item.EndTime).ToString(@"hh\:mm\:ss\.fff"),
+                        lss_start = TimeSpan.FromMilliseconds(item.StartTime).ToString(@"hh\:mm\:ss\,fff"),
+                        lss_end = TimeSpan.FromMilliseconds(item.EndTime).ToString(@"hh\:mm\:ss\,fff"),
                         lss_text = string.Join(" ", item.PlaintextLines),
                     }).ToList();
                     var trans = connection.BeginTransaction();
