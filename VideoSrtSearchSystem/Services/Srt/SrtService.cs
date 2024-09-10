@@ -134,5 +134,38 @@ namespace VideoSrtSearchSystem.Services.Srt
                 throw;
             }
         }
+
+        public DownloadSrtResponse DownloadSrt(string videoGuid)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 取得影片資訊
+                var videoModel = _liveStreamingRepository.GetByGuid(videoGuid, connection);
+                // 取得影片字幕
+                var srtList = _liveStreamingSrtRepository.GetByVideoId(videoModel.ls_id, connection);
+                var sb = new StringBuilder();
+                foreach (var srtObj in srtList)
+                {
+                    sb = sb.Append($"{srtObj.lss_num}\n")
+                        .Append($"{srtObj.lss_start} --> {srtObj.lss_end}\n")
+                        .Append($"{srtObj.lss_text}\n\n");
+                }
+                // 將字串轉換為字節數組
+                byte[] byteArray = Encoding.UTF8.GetBytes(sb.ToString());
+
+                // 將字節數組轉換為 MemoryStream
+                return new DownloadSrtResponse
+                {
+                    FileName = $"{videoModel.ls_title}.srt",
+                    SrtFile = new MemoryStream(byteArray),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
     }
 }

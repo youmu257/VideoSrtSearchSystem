@@ -7,5 +7,6 @@ namespace VideoSrtSearchSystem.Services.Srt
     {
         void ImportSrt(ImportSrtRequest request);
         SearchSrtResponse SearchSrt(string keyword, int page);
+        DownloadSrtResponse DownloadSrt(string videoGuid);
     }
 }

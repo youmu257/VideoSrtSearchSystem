@@ -72,6 +72,27 @@ namespace VideoSrtSearchSystem.Repository.LiveStraming
             }
         }
 
+        public LiveStreamingModel GetByGuid(string guid, MySqlConnection? connection = null)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingModel.ls_id),
+                    nameof(LiveStreamingModel.ls_title),
+                    nameof(LiveStreamingModel.ls_url),
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .Where(nameof(LiveStreamingModel.ls_guid), "=", guid)
+                    .Select(cols);
+                return _mySqlTool.SelectOne<LiveStreamingModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public uint Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingModel model)
         {
             try

@@ -98,5 +98,28 @@ namespace VideoSrtSearchSystem.Repository.Srt
                 throw;
             }
         }
+
+        public List<LiveStreamingSrtModel> GetByVideoId(uint videoId, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingSrtModel.lss_num),
+                    nameof(LiveStreamingSrtModel.lss_text),
+                    nameof(LiveStreamingSrtModel.lss_start),
+                    nameof(LiveStreamingSrtModel.lss_end),
+                };
+                var query = new Query(LiveStreamingSrtModel.TableName)
+                    .Where(nameof(LiveStreamingSrtModel.lss_ls_id), "=", videoId)
+                    .OrderBy(nameof(LiveStreamingSrtModel.lss_num))
+                    .Select(cols);
+                return _mySqlTool.SelectMany<LiveStreamingSrtModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
