@@ -36,7 +36,7 @@
                             <div class="list-group">
                                 @foreach (var srtObj in item.SrtList)
                                 {
-                                    var url = $"{item.VideoUrl}&t={srtObj.SrtStartTimeSeconds.ToString()}s";
+                                    var url = $"https://www.youtube.com/watch?v={item.VideoUrl}&t={srtObj.SrtStartTimeSeconds.ToString()}s";
                                     <div class="list-group-item">
                                         <a class="mb-1" href="@url" target="_blank">@srtObj.SrtStartTime - @srtObj.SrtEndTime</a>
                                         <p class="mb-1">@srtObj.Context</p>

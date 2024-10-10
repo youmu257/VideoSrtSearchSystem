@@ -33,6 +33,8 @@ namespace VideoSrtSearchSystem.Services.Srt
                     throw new MyException(ResponseCode.FILE_NOT_FOUND);
                 }
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 只留影片ID
+                request.VideoUrl = request.VideoUrl.Replace("https://www.youtube.com/watch?v=", "");
                 // 檢查影片是否已存在
                 var liveStramingModel = _liveStreamingRepository.GetByUrl(request.VideoUrl, connection);
                 bool noVideo = string.IsNullOrEmpty(liveStramingModel.ls_guid);
