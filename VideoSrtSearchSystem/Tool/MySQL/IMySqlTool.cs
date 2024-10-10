@@ -21,5 +21,7 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             where V : BaseModel, new();
         uint Insert(MySqlConnection connection, MySqlTransaction trans, Query query);
         uint Insert(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null);
+        int Delete(MySqlConnection connection, MySqlTransaction trans, Query query);
+        int Delete(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null);
     }
 }

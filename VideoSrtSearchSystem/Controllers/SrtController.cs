@@ -22,10 +22,6 @@ namespace VideoSrtSearchSystem.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(request.SrtPath))
-                {
-                    return ParameterIsRequired("SrtPath");
-                }
                 if (string.IsNullOrEmpty(request.VideoTitle))
                 {
                     return ParameterIsRequired("VideoTitle");
@@ -36,6 +32,27 @@ namespace VideoSrtSearchSystem.Controllers
                 }
 
                 _srtService.ImportSrt(request);
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"));
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResponse(ex);
+            }
+        }
+
+        /// <summary>
+        /// 匯入字幕
+        /// </summary>
+        [HttpPost]
+        [Route("import/list")]
+        public IActionResult ImportSrtList(List<ImportSrtRequest> requests)
+        {
+            try
+            {
+                foreach (var request in requests)
+                {
+                    _srtService.ImportSrt(request);
+                }
                 return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"));
             }
             catch (Exception ex)

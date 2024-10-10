@@ -1,6 +1,8 @@
-﻿using SubtitlesParser.Classes.Parsers;
+﻿using Microsoft.Extensions.Options;
+using SubtitlesParser.Classes.Parsers;
 using System.Text;
 using VideoSrtSearchSystem.Config;
+using VideoSrtSearchSystem.Config.Appsettings;
 using VideoSrtSearchSystem.DTO.Request.Srt;
 using VideoSrtSearchSystem.DTO.Response.Srt;
 using VideoSrtSearchSystem.Exceptions;
@@ -18,16 +20,22 @@ namespace VideoSrtSearchSystem.Services.Srt
         IMySQLConnectionProvider _mySQLConnectionProvider,
         ILogger<SrtService> _logger,
         ICommonTool _commonTool,
+        IOptions<SrtConfig> _srtConfig,
         IWebHostEnvironment appEnvironment
     ) : ISrtService
     {
         private readonly string outputDirectory = Path.Combine(appEnvironment.WebRootPath, "output");
         private readonly int _searchPageSize = 20;
+        private readonly string _srtDefaultPath = _srtConfig.Value.SrtDefaultPath;
 
         public void ImportSrt(ImportSrtRequest request)
         {
             try
             {
+                if (string.IsNullOrEmpty(request.SrtPath))
+                {
+                    request.SrtPath = Path.Combine(_srtDefaultPath, $"{request.VideoTitle}.srt");
+                }
                 if (!File.Exists(request.SrtPath))
                 {
                     throw new MyException(ResponseCode.FILE_NOT_FOUND);
@@ -69,6 +77,11 @@ namespace VideoSrtSearchSystem.Services.Srt
                                 ls_url = request.VideoUrl,
                             });
                             insertSrtList.ForEach(item => item.lss_ls_id = liveStramingModel.ls_id);
+                        }
+                        if (noVideo == false)
+                        {
+                            // 已有影片資料，把原有字幕清除
+                            _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveStramingModel.ls_id);
                         }
                         // 寫入字幕資訊
                         _liveStreamingSrtRepository.Insert(connection, trans, insertSrtList);

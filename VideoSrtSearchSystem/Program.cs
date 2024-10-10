@@ -1,5 +1,6 @@
 using Serilog;
 using VideoSrtSearchSystem.Config;
+using VideoSrtSearchSystem.Config.Appsettings;
 using VideoSrtSearchSystem.Repository.LiveStraming;
 using VideoSrtSearchSystem.Repository.Srt;
 using VideoSrtSearchSystem.Services.Srt;
@@ -25,6 +26,11 @@ builder.Services.AddControllersWithViews();
 //                .AllowCredentials();
 //        });
 //});
+
+#region config
+builder.Services.Configure<SrtConfig>(builder.Configuration.GetSection("SrtConfig"));
+#endregion
+
 #region log
 builder.Logging.ClearProviders();
 Log.Logger = new LoggerConfiguration()
@@ -33,6 +39,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Services.AddLogging(loggingBuilder =>
           loggingBuilder.AddSerilog(dispose: true));
 #endregion
+
 #region Tool 依賴注入
 builder.Services.AddTransient<IMySQLConnectionProvider, MySQLConnectionProvider>();
 builder.Services.AddSingleton<IMySqlTool, MySqlTool>();

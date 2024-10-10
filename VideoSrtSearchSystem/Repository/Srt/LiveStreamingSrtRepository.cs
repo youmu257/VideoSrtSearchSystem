@@ -40,6 +40,21 @@ namespace VideoSrtSearchSystem.Repository.Srt
             }
         }
 
+        public int DeleteByVideoId(MySqlConnection connection, MySqlTransaction trans, uint videoId)
+        {
+            try
+            {
+                var query = new Query(LiveStreamingSrtModel.TableName)
+                    .Where(nameof(LiveStreamingSrtModel.lss_ls_id), "=", videoId)
+                    .AsDelete();
+                return _mySqlTool.Delete(connection, trans, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public List<TwoModelData<LiveStreamingModel, LiveStreamingSrtModel>> GetByLikeKeyword(string keyword, int page, int pageSize, MySqlConnection connection)
         {
             try

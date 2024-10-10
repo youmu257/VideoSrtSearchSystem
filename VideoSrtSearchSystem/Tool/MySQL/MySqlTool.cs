@@ -227,5 +227,22 @@ namespace VideoSrtSearchSystem.Tool.MySQL
             }
             return result;
         }
+
+        public int Delete(MySqlConnection connection, MySqlTransaction trans, Query query)
+        {
+            SqlResult sqlResult = new MySqlCompiler().Compile(query);
+            return Delete(connection, trans, sqlResult.Sql, sqlResult.NamedBindings);
+        }
+
+        public int Delete(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null)
+        {
+            int result = 0;
+            using (MySqlCommand mySqlCommand = new MySqlCommand(query, connection, trans))
+            {
+                AddParametersToCommand(mySqlCommand, parameters);
+                result = mySqlCommand.ExecuteNonQuery();
+            }
+            return result;
+        }
     }
 }
