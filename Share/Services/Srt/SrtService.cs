@@ -30,7 +30,7 @@ namespace Share.Services.Srt
         private readonly int _searchPageSize = 20;
         private readonly string _srtDefaultPath = _srtConfig.Value.SrtDefaultPath;
 
-        public void ImportSrt(ImportSrtRequest request)
+        public string ImportSrt(ImportSrtRequest request)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace Share.Services.Srt
                 }
                 if (!File.Exists(request.SrtPath))
                 {
-                    throw new MyException(ResponseCode.FILE_NOT_FOUND);
+                    return ResponseCode.FILE_NOT_FOUND;
                 }
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
                 // 只留影片ID
@@ -95,6 +95,7 @@ namespace Share.Services.Srt
                         trans.Rollback();
                     }
                 }
+                return ResponseCode.SUCCESS;
             }
             catch (Exception ex)
             {

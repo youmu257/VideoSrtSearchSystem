@@ -4,6 +4,7 @@ using Share.DTO.Request.Srt;
 using Share.Services.Srt;
 using Share.Tool.Language;
 using Share.Const;
+using Share.Exceptions;
 
 namespace VideoSrtSearchSystem.Controllers
 {
@@ -31,7 +32,11 @@ namespace VideoSrtSearchSystem.Controllers
                     return ParameterIsRequired("VideoUrl");
                 }
 
-                _srtService.ImportSrt(request);
+                var responseCode = _srtService.ImportSrt(request);
+                if (responseCode != ResponseCode.SUCCESS)
+                {
+                    throw new MyException(responseCode);
+                }
                 return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"));
             }
             catch (Exception ex)

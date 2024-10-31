@@ -24,7 +24,7 @@ namespace Share.Repositorys.Srt
                 };
                 var insertDataList = modelList.Select(model => new List<object>
                 {
-                    model.lss_ls_id,
+                    model.lss_ls_id.Value,
                     model.lss_num,
                     model.lss_start,
                     model.lss_end,
