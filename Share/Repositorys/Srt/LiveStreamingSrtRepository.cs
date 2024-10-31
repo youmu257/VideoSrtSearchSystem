@@ -65,6 +65,7 @@ namespace Share.Repositorys.Srt
                     nameof(LiveStreamingModel.ls_title),
                     nameof(LiveStreamingModel.ls_guid),
                     nameof(LiveStreamingModel.ls_url),
+                    nameof(LiveStreamingModel.ls_livetime),
                 };
                 var subQuery = new Query(LiveStreamingSrtModel.TableName)
                     .Join(LiveStreamingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingSrtModel.lss_ls_id))
@@ -79,6 +80,7 @@ namespace Share.Repositorys.Srt
                     nameof(LiveStreamingModel.ls_title),
                     nameof(LiveStreamingModel.ls_guid),
                     nameof(LiveStreamingModel.ls_url),
+                    nameof(LiveStreamingModel.ls_livetime),
                     nameof(LiveStreamingSrtModel.lss_text),
                     nameof(LiveStreamingSrtModel.lss_start),
                     nameof(LiveStreamingSrtModel.lss_end),

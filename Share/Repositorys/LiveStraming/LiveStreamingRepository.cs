@@ -102,12 +102,14 @@ namespace Share.Repositorys.LiveStraming
                     nameof(LiveStreamingModel.ls_guid),
                     nameof(LiveStreamingModel.ls_title),
                     nameof(LiveStreamingModel.ls_url),
+                    nameof(LiveStreamingModel.ls_livetime),
                 };
                 var insertDataList = new List<object>
                 {
                     model.ls_guid,
                     model.ls_title,
                     model.ls_url,
+                    model.ls_livetime,
                 };
                 var query = new Query(LiveStreamingModel.TableName)
                     .AsInsert(insertCols, insertDataList);

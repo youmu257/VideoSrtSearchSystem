@@ -20,6 +20,9 @@ namespace Share.DTO.Response.Srt
         [JsonPropertyName("url")]
         public string VideoUrl { get; set; } = string.Empty;
 
+        [JsonPropertyName("liveTime")]
+        public string LiveTime { get; set; } = string.Empty;
+
         [JsonPropertyName("srts")]
         public List<SrtResponse> SrtList { get; set; } = new List<SrtResponse>();
     }

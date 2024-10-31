@@ -78,6 +78,7 @@ namespace Share.Services.Srt
                                 ls_guid = videoGuid,
                                 ls_title = request.VideoTitle,
                                 ls_url = request.VideoUrl,
+                                ls_livetime = DateTime.Parse(request.LiveTime),
                             });
                             insertSrtList.ForEach(item => item.lss_ls_id = liveStramingModel.ls_id);
                         }
@@ -130,6 +131,7 @@ namespace Share.Services.Srt
                             VideoTitle = srtModel.ModelK!.ls_title,
                             VideoGuid = videoGuid,
                             VideoUrl = srtModel.ModelK!.ls_url,
+                            LiveTime = srtModel.ModelK!.ls_livetime.ToString("yyyy-MM-dd"),
                             SrtList = new List<SrtResponse>
                             {
                                 srtData

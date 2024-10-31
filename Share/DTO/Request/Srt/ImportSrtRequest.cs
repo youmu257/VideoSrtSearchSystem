@@ -23,5 +23,11 @@ namespace Share.DTO.Request.Srt
         /// </summary>
         [JsonPropertyName("videoUrl")]
         public string VideoUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 直播時間
+        /// </summary>
+        [JsonPropertyName("liveTime")]
+        public string LiveTime { get; set; } = string.Empty;
     }
 }

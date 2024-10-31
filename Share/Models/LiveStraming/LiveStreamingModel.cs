@@ -13,11 +13,25 @@ namespace Share.Models.LiveStraming
 
         public LsId ls_id { get; set; } = LsId.From(0);
 
+        /// <summary>
+        /// 影片 guid
+        /// </summary>
         public string ls_guid { get; set; } = string.Empty;
 
+        /// <summary>
+        /// 影片標題
+        /// </summary>
         public string ls_title { get; set; } = string.Empty;
 
+        /// <summary>
+        /// 影片網址
+        /// </summary>
         public string ls_url { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 直播時間
+        /// </summary>
+        public DateTime ls_livetime { get; set; }
 
         public DateTime ls_createtime { get; set; }
 
@@ -49,6 +63,9 @@ namespace Share.Models.LiveStraming
                         break;
                     case nameof(ls_url):
                         ls_url = dr.GetString(i);
+                        break;
+                    case nameof(ls_livetime):
+                        ls_livetime = dr.GetDateTime(i);
                         break;
                     case nameof(ls_createtime):
                         ls_createtime = dr.GetDateTime(i);
