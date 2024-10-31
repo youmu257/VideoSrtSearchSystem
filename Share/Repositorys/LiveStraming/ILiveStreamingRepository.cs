@@ -9,6 +9,6 @@ namespace Share.Repositorys.LiveStraming
         int GetCount(MySqlConnection? connection = null);
         LiveStreamingModel GetByUrl(string url, MySqlConnection? connection = null);
         LiveStreamingModel GetByGuid(string guid, MySqlConnection? connection = null);
-        uint Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingModel model);
+        LsId Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingModel model);
     }
 }

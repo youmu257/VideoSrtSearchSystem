@@ -40,12 +40,12 @@ namespace Share.Repositorys.Srt
             }
         }
 
-        public int DeleteByVideoId(MySqlConnection connection, MySqlTransaction trans, uint videoId)
+        public int DeleteByVideoId(MySqlConnection connection, MySqlTransaction trans, LsId videoId)
         {
             try
             {
                 var query = new Query(LiveStreamingSrtModel.TableName)
-                    .Where(nameof(LiveStreamingSrtModel.lss_ls_id), "=", videoId)
+                    .Where(nameof(LiveStreamingSrtModel.lss_ls_id), "=", videoId.Value)
                     .AsDelete();
                 return _mySqlTool.Delete(connection, trans, query);
             }
@@ -114,7 +114,7 @@ namespace Share.Repositorys.Srt
             }
         }
 
-        public List<LiveStreamingSrtModel> GetByVideoId(uint videoId, MySqlConnection connection)
+        public List<LiveStreamingSrtModel> GetByVideoId(LsId videoId, MySqlConnection connection)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace Share.Repositorys.Srt
                     nameof(LiveStreamingSrtModel.lss_end),
                 };
                 var query = new Query(LiveStreamingSrtModel.TableName)
-                    .Where(nameof(LiveStreamingSrtModel.lss_ls_id), "=", videoId)
+                    .Where(nameof(LiveStreamingSrtModel.lss_ls_id), "=", videoId.Value)
                     .OrderBy(nameof(LiveStreamingSrtModel.lss_num))
                     .Select(cols);
                 return _mySqlTool.SelectMany<LiveStreamingSrtModel>(connection, query);

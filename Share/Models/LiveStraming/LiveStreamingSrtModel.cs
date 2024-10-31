@@ -1,15 +1,19 @@
 ﻿using MySqlConnector;
 using Share.Tool.MySQL;
+using Vogen;
 
 namespace Share.Models.LiveStraming
 {
+    [ValueObject<uint>]
+    public partial struct LssId;
+
     public class LiveStreamingSrtModel : BaseModel
     {
         public static string TableName = "livestreamingsrt";
 
-        public uint lss_id { get; set; }
+        public LssId lss_id { get; set; } = LssId.From(0);
 
-        public uint lss_ls_id { get; set; }
+        public LsId lss_ls_id { get; set; } = LsId.From(0);
 
         public uint lss_num { get; set; }
 
@@ -39,10 +43,10 @@ namespace Share.Models.LiveStraming
                 switch (dr.GetName(i))
                 {
                     case nameof(lss_id):
-                        lss_id = dr.GetUInt32(i);
+                        lss_id = LssId.From(dr.GetUInt32(i));
                         break;
                     case nameof(lss_ls_id):
-                        lss_ls_id = dr.GetUInt32(i);
+                        lss_ls_id = LsId.From(dr.GetUInt32(i));
                         break;
                     case nameof(lss_num):
                         lss_num = dr.GetUInt32(i);

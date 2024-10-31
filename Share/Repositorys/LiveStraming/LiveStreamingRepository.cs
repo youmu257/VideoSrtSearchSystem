@@ -93,7 +93,7 @@ namespace Share.Repositorys.LiveStraming
             }
         }
 
-        public uint Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingModel model)
+        public LsId Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingModel model)
         {
             try
             {
@@ -111,7 +111,7 @@ namespace Share.Repositorys.LiveStraming
                 };
                 var query = new Query(LiveStreamingModel.TableName)
                     .AsInsert(insertCols, insertDataList);
-                return _mySqlTool.Insert(connection, trans, query);
+                return LsId.From(_mySqlTool.Insert(connection, trans, query));
             }
             catch (Exception)
             {
