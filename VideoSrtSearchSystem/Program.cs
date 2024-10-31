@@ -1,13 +1,13 @@
 using Serilog;
-using VideoSrtSearchSystem.Config;
-using VideoSrtSearchSystem.Config.Appsettings;
-using VideoSrtSearchSystem.Repository.LiveStraming;
-using VideoSrtSearchSystem.Repository.Srt;
-using VideoSrtSearchSystem.Services.Srt;
-using VideoSrtSearchSystem.Services.Video;
-using VideoSrtSearchSystem.Tool;
-using VideoSrtSearchSystem.Tool.Language;
-using VideoSrtSearchSystem.Tool.MySQL;
+using Share.Config.Appsettings;
+using Share.Const;
+using Share.Repositorys.LiveStraming;
+using Share.Repositorys.Srt;
+using Share.Services.Srt;
+using Share.Services.Video;
+using Share.Tool;
+using Share.Tool.Language;
+using Share.Tool.MySQL;
 
 LangTool.SetLang(Lang.ZH_TW);
 

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.1.38" />
+    <PackageReference Include="MySql.Data" Version="9.1.0" />
+    <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.8" />
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="SqlKata" Version="2.4.0" />
+    <PackageReference Include="SubtitlesParser" Version="1.5.1" />
+  </ItemGroup>
+
+</Project>

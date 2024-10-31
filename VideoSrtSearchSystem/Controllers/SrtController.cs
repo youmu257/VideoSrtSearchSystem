@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Web;
-using VideoSrtSearchSystem.Config;
-using VideoSrtSearchSystem.DTO.Request.Srt;
-using VideoSrtSearchSystem.Services.Srt;
-using VideoSrtSearchSystem.Tool.Language;
+using Share.DTO.Request.Srt;
+using Share.Services.Srt;
+using Share.Tool.Language;
+using Share.Const;
 
 namespace VideoSrtSearchSystem.Controllers
 {
