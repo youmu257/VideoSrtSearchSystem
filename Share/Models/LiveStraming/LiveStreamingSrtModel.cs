@@ -9,7 +9,7 @@ namespace Share.Models.LiveStraming
 
     public class LiveStreamingSrtModel : BaseModel
     {
-        public static string TableName = "livestreamingsrt";
+        public static string TableName = "live_streaming_srt";
 
         public LssId lss_id { get; set; } = LssId.From(0);
 
