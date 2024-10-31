@@ -29,6 +29,7 @@ namespace Share.Services.Srt
         private readonly string outputDirectory = Path.Combine(appEnvironment.WebRootPath, "output");
         private readonly int _searchPageSize = 20;
         private readonly string _srtDefaultPath = _srtConfig.Value.SrtDefaultPath;
+        private readonly string srtTimeFormat = @"hh\:mm\:ss\,fff";
 
         public string ImportSrt(ImportSrtRequest request)
         {
@@ -118,7 +119,7 @@ namespace Share.Services.Srt
                     var srtData = new SrtResponse
                     {
                         Context = srtModel.ModelV!.lss_text,
-                        SrtStartTimeSeconds = (int)TimeSpan.Parse(srtModel.ModelV!.lss_start).TotalSeconds,
+                        SrtStartTimeSeconds = (int)TimeSpan.ParseExact(srtModel.ModelV!.lss_start, srtTimeFormat, null).TotalSeconds,
                         SrtStartTime = srtModel.ModelV!.lss_start,
                         SrtEndTime = srtModel.ModelV!.lss_end,
                     };
