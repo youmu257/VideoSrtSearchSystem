@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using Share.DTO.Request.Video;
 using Share.Models;
 using Share.Services.Srt;
 using Share.Services.Video;
+using System.Diagnostics;
 
 namespace VideoSrtSearchSystem.Controllers
 {

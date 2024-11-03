@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Share.Const;
+using Share.Tool.Language;
 using System.Diagnostics;
 using System.Reflection;
-using Share.Tool.Language;
-using Share.Const;
 
 namespace VideoSrtSearchSystem.Controllers
 {

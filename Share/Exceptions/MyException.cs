@@ -1,6 +1,6 @@
-﻿using System.Runtime.Serialization;
-using Share.Const;
+﻿using Share.Const;
 using Share.Tool.Language;
+using System.Runtime.Serialization;
 
 namespace Share.Exceptions
 {

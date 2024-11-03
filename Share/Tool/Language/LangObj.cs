@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
+using Share.Const;
 using System.Collections.Concurrent;
 using System.Text;
-using Share.Const;
 
 namespace Share.Tool.Language
 {

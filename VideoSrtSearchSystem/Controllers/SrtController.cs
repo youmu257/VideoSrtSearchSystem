@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Web;
+using Share.Const;
 using Share.DTO.Request.Srt;
+using Share.Exceptions;
 using Share.Services.Srt;
 using Share.Tool.Language;
-using Share.Const;
-using Share.Exceptions;
+using System.Web;
 
 namespace VideoSrtSearchSystem.Controllers
 {

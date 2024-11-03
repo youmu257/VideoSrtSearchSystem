@@ -1,18 +1,17 @@
-﻿using Microsoft.Extensions.Options;
-using SubtitlesParser.Classes.Parsers;
-using System.Text;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Share.Config.Appsettings;
+using Share.Const;
 using Share.DTO.Request.Srt;
 using Share.DTO.Response.Srt;
-using Share.Exceptions;
 using Share.Models.LiveStraming;
 using Share.Repositorys.LiveStraming;
 using Share.Repositorys.Srt;
 using Share.Tool;
 using Share.Tool.MySQL;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Hosting;
-using Share.Const;
+using SubtitlesParser.Classes.Parsers;
+using System.Text;
 
 namespace Share.Services.Srt
 {

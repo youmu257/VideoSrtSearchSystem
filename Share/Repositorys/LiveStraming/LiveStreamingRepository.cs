@@ -1,7 +1,7 @@
 ﻿using MySqlConnector;
-using SqlKata;
 using Share.Models.LiveStraming;
 using Share.Tool.MySQL;
+using SqlKata;
 
 namespace Share.Repositorys.LiveStraming
 {
