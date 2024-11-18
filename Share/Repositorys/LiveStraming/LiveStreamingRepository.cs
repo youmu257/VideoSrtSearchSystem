@@ -103,6 +103,7 @@ namespace Share.Repositorys.LiveStraming
                     nameof(LiveStreamingModel.ls_title),
                     nameof(LiveStreamingModel.ls_url),
                     nameof(LiveStreamingModel.ls_livetime),
+                    nameof(LiveStreamingModel.ls_all_srt),
                 };
                 var insertDataList = new List<object>
                 {
@@ -110,10 +111,30 @@ namespace Share.Repositorys.LiveStraming
                     model.ls_title,
                     model.ls_url,
                     model.ls_livetime,
+                    model.ls_all_srt,
                 };
                 var query = new Query(LiveStreamingModel.TableName)
                     .AsInsert(insertCols, insertDataList);
                 return LsId.From(_mySqlTool.Insert(connection, trans, query));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public int UpdateAllSrt(MySqlConnection connection, MySqlTransaction trans, string videoGuid, string allSrt)
+        {
+            try
+            {
+                var update = new Dictionary<string, object>()
+                {
+                    { nameof(LiveStreamingModel.ls_all_srt), allSrt },
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .Where(nameof(LiveStreamingModel.ls_guid), videoGuid)
+                    .AsUpdate(update);
+                return _mySqlTool.Update(connection, trans, query);
             }
             catch (Exception)
             {

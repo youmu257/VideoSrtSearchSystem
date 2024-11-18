@@ -244,5 +244,23 @@ namespace Share.Tool.MySQL
             }
             return result;
         }
+
+        public int Update(MySqlConnection connection, MySqlTransaction trans, Query query)
+        {
+            var compiler = new MySqlCompiler();
+            var compiledQuery = compiler.Compile(query);
+            return Update(connection, trans, compiledQuery.Sql, compiledQuery.NamedBindings);
+        }
+
+        public int Update(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null)
+        {
+            int result = 0;
+            using (MySqlCommand mySqlCommand = new MySqlCommand(query, connection, trans))
+            {
+                AddParametersToCommand(mySqlCommand, parameters);
+                result = mySqlCommand.ExecuteNonQuery();
+            }
+            return result;
+        }
     }
 }

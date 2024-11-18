@@ -52,49 +52,63 @@ namespace Share.Services.Srt
                 var videoGuid = noVideo ?
                     Guid.NewGuid().ToString() :
                     liveStramingModel.ls_guid;
-
+                #region 整理寫入的資料
+                var insertSrtList = new List<LiveStreamingSrtModel>();
                 var parser = new SrtParser();
                 using (var fileStream = File.OpenRead(request.SrtPath))
                 {
                     var items = parser.ParseStream(fileStream, Encoding.UTF8);
                     uint index = 1;
-                    var insertSrtList = items.Select(item => new LiveStreamingSrtModel
+                    foreach (var item in items)
                     {
-                        lss_ls_id = liveStramingModel.ls_id,
-                        lss_num = index++,
-                        lss_start = TimeSpan.FromMilliseconds(item.StartTime).ToString(@"hh\:mm\:ss\,fff"),
-                        lss_end = TimeSpan.FromMilliseconds(item.EndTime).ToString(@"hh\:mm\:ss\,fff"),
-                        lss_text = string.Join(" ", item.PlaintextLines),
-                    }).ToList();
-                    var trans = connection.BeginTransaction();
-                    try
-                    {
-                        if (noVideo)
+                        var srtText = string.Join(" ", item.PlaintextLines);
+                        insertSrtList.Add(new LiveStreamingSrtModel
                         {
-                            // 寫入影片資訊
-                            liveStramingModel.ls_id = _liveStreamingRepository.Insert(connection, trans, new LiveStreamingModel
-                            {
-                                ls_guid = videoGuid,
-                                ls_title = request.VideoTitle,
-                                ls_url = request.VideoUrl,
-                                ls_livetime = DateTime.Parse(request.LiveTime),
-                            });
-                            insertSrtList.ForEach(item => item.lss_ls_id = liveStramingModel.ls_id);
-                        }
-                        if (noVideo == false)
-                        {
-                            // 已有影片資料，把原有字幕清除
-                            _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveStramingModel.ls_id);
-                        }
-                        // 寫入字幕資訊
-                        _liveStreamingSrtRepository.Insert(connection, trans, insertSrtList);
-                        trans.Commit();
+                            lss_ls_id = liveStramingModel.ls_id,
+                            lss_num = index++,
+                            lss_start = TimeSpan.FromMilliseconds(item.StartTime).ToString(@"hh\:mm\:ss\,fff"),
+                            lss_end = TimeSpan.FromMilliseconds(item.EndTime).ToString(@"hh\:mm\:ss\,fff"),
+                            lss_text = srtText,
+                        });
                     }
-                    catch (Exception ex)
+                }
+                if (insertSrtList.Count() == 0)
+                {
+                    return ResponseCode.SUCCESS;
+                }
+                var allSrt = string.Join("", insertSrtList.Select(item => item.lss_text).Distinct());
+                #endregion
+                var trans = connection.BeginTransaction();
+                try
+                {
+                    if (noVideo)
                     {
-                        _logger.LogError(ex.ToString());
-                        trans.Rollback();
+                        // 寫入影片資訊
+                        liveStramingModel.ls_id = _liveStreamingRepository.Insert(connection, trans, new LiveStreamingModel
+                        {
+                            ls_guid = videoGuid,
+                            ls_title = request.VideoTitle,
+                            ls_url = request.VideoUrl,
+                            ls_livetime = DateTime.Parse(request.LiveTime),
+                            ls_all_srt = allSrt,
+                        });
+                        insertSrtList.ForEach(item => item.lss_ls_id = liveStramingModel.ls_id);
                     }
+                    else
+                    {
+                        // 已有影片資料，把原有字幕清除
+                        _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveStramingModel.ls_id);
+                        // 更新全部字幕
+                        _liveStreamingRepository.UpdateAllSrt(connection, trans, videoGuid, allSrt);
+                    }
+                    // 寫入字幕資訊
+                    _liveStreamingSrtRepository.Insert(connection, trans, insertSrtList);
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.ToString());
+                    trans.Rollback();
                 }
                 return ResponseCode.SUCCESS;
             }

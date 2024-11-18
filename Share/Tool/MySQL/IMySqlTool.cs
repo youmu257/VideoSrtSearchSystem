@@ -23,5 +23,7 @@ namespace Share.Tool.MySQL
         uint Insert(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null);
         int Delete(MySqlConnection connection, MySqlTransaction trans, Query query);
         int Delete(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null);
+        int Update(MySqlConnection connection, MySqlTransaction trans, Query query);
+        int Update(MySqlConnection connection, MySqlTransaction trans, string query, Dictionary<string, object>? parameters = null);
     }
 }

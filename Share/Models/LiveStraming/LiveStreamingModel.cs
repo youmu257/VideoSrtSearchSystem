@@ -29,6 +29,11 @@ namespace Share.Models.LiveStraming
         public string ls_url { get; set; } = string.Empty;
 
         /// <summary>
+        /// 所有字幕
+        /// </summary>
+        public string ls_all_srt { get; set; } = string.Empty;
+
+        /// <summary>
         /// 直播時間
         /// </summary>
         public DateTime ls_livetime { get; set; }
@@ -63,6 +68,9 @@ namespace Share.Models.LiveStraming
                         break;
                     case nameof(ls_url):
                         ls_url = dr.GetString(i);
+                        break;
+                    case nameof(ls_all_srt):
+                        ls_all_srt = dr.GetString(i);
                         break;
                     case nameof(ls_livetime):
                         ls_livetime = dr.GetDateTime(i);
