@@ -24,7 +24,7 @@ namespace Share.Tool.Language
                 return;
             }
 
-            string format = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", "Language", "{0}.json");
+            string format = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Language", "{0}.json");
             string path = string.Format(format, text);
             if (!File.Exists(path))
             {
