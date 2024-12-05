@@ -34,6 +34,29 @@ namespace Share.Repositorys.LiveStraming
             }
         }
 
+        public List<LiveStreamingModel> GetAll(MySqlConnection? connection = null)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingModel.ls_id),
+                    nameof(LiveStreamingModel.ls_guid),
+                    nameof(LiveStreamingModel.ls_all_srt),
+                    nameof(LiveStreamingModel.ls_title),
+                    nameof(LiveStreamingModel.ls_url),
+                    nameof(LiveStreamingModel.ls_livetime),
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .Select(cols);
+                return _mySqlTool.SelectMany<LiveStreamingModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public int GetCount(MySqlConnection? connection = null)
         {
             try

@@ -67,14 +67,12 @@ namespace Share.Repositorys.Srt
                     nameof(LiveStreamingModel.ls_url),
                     nameof(LiveStreamingModel.ls_livetime),
                 };
-                var subQuery = new Query(LiveStreamingSrtModel.TableName)
-                    .Join(LiveStreamingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingSrtModel.lss_ls_id))
-                    .WhereLike(nameof(LiveStreamingSrtModel.lss_text), $"%{keyword}%")
+                var subQuery = new Query(LiveStreamingModel.TableName)
+                    .WhereLike(nameof(LiveStreamingModel.ls_all_srt), $"%{keyword}%")
                     .OrderBy(nameof(LiveStreamingModel.ls_createtime))
                     .Offset((page - 1) * pageSize)
                     .Limit(pageSize)
-                    .Select(subcols)
-                    .Distinct();
+                    .Select(subcols);
                 var cols = new string[]
                 {
                     nameof(LiveStreamingModel.ls_title),
@@ -100,14 +98,36 @@ namespace Share.Repositorys.Srt
             }
         }
 
+        public List<LiveStreamingSrtModel> GetByLikeKeyword(List<LsId> lsIdList, string keyword, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingSrtModel.lss_ls_id),
+                    nameof(LiveStreamingSrtModel.lss_text),
+                    nameof(LiveStreamingSrtModel.lss_start),
+                    nameof(LiveStreamingSrtModel.lss_end),
+                };
+                var query = new Query(LiveStreamingSrtModel.TableName)
+                    .WhereIn(nameof(LiveStreamingSrtModel.lss_ls_id), lsIdList.Select(item => item.Value))
+                    .WhereLike(nameof(LiveStreamingSrtModel.lss_text), $"%{keyword}%")
+                    .Select(cols);
+                return _mySqlTool.SelectMany<LiveStreamingSrtModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public int GetTotalPageByLikeKeyword(string keyword, MySqlConnection connection)
         {
             try
             {
-                var query = new Query(LiveStreamingSrtModel.TableName)
-                    .Join(LiveStreamingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingSrtModel.lss_ls_id))
-                    .WhereLike(nameof(LiveStreamingSrtModel.lss_text), $"%{keyword}%")
-                    .SelectRaw($"COUNT(DISTINCT({nameof(LiveStreamingModel.ls_id)}))");
+                var query = new Query(LiveStreamingModel.TableName)
+                    .WhereLike(nameof(LiveStreamingModel.ls_all_srt), $"%{keyword}%")
+                    .SelectRaw($"COUNT({nameof(LiveStreamingModel.ls_id)})");
                 return _mySqlTool.Count(connection, query);
             }
             catch (Exception)

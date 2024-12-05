@@ -28,7 +28,9 @@ namespace Share.Services.Srt
         private readonly string outputDirectory = Path.Combine(appEnvironment.WebRootPath, "output");
         private readonly int _searchPageSize = 20;
         private readonly string _srtDefaultPath = _srtConfig.Value.SrtDefaultPath;
-        private readonly string srtTimeFormat = @"hh\:mm\:ss\,fff";
+        private readonly string _srtTimeFormat = @"hh\:mm\:ss\,fff";
+        private static List<LiveStreamingModel> _cacheAllSrtList = new List<LiveStreamingModel>();
+        private static Dictionary<LsId, LiveStreamingModel> _cacheVideoDict = new Dictionary<LsId, LiveStreamingModel>();
 
         public string ImportSrt(ImportSrtRequest request)
         {
@@ -119,6 +121,9 @@ namespace Share.Services.Srt
             }
         }
 
+        /// <summary>
+        /// 從DB中撈關鍵字出現在哪幾個影片中，再抓對應的字幕出來
+        /// </summary>
         public SearchSrtResponse SearchSrt(string keyword, int page)
         {
             try
@@ -133,7 +138,7 @@ namespace Share.Services.Srt
                     var srtData = new SrtResponse
                     {
                         Context = srtModel.ModelV!.lss_text,
-                        SrtStartTimeSeconds = (int)TimeSpan.ParseExact(srtModel.ModelV!.lss_start, srtTimeFormat, null).TotalSeconds,
+                        SrtStartTimeSeconds = (int)TimeSpan.ParseExact(srtModel.ModelV!.lss_start, _srtTimeFormat, null).TotalSeconds,
                         SrtStartTime = srtModel.ModelV!.lss_start,
                         SrtEndTime = srtModel.ModelV!.lss_end,
                     };
@@ -156,6 +161,74 @@ namespace Share.Services.Srt
                 }
                 // 取得查詢總數量
                 var totalCount = _liveStreamingSrtRepository.GetTotalPageByLikeKeyword(keyword, connection);
+                return new SearchSrtResponse
+                {
+                    TotalPage = _commonTool.GetTotalPage(totalCount, _searchPageSize),
+                    VideoList = srtDict.Values.ToList(),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 從記憶體中抓關鍵字在哪幾個影片中，去從DB中抓對應字幕
+        /// </summary>
+        public SearchSrtResponse SearchSrtByMemory(string keyword, int page)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 字幕檔未載入就初始化
+                if (_cacheAllSrtList.Count() == 0)
+                {
+                    _cacheAllSrtList = _liveStreamingRepository.GetAll(connection);
+                    _cacheVideoDict = _cacheAllSrtList.ToDictionary(item => item.ls_id, item => new LiveStreamingModel
+                    {
+                        ls_guid = item.ls_guid.Replace("-", ""),
+                        ls_title = item.ls_title,
+                        ls_url = item.ls_url,
+                        ls_livetime = item.ls_livetime,
+                    });
+                }
+                var keywordInVideoList = _cacheAllSrtList.Where(item => item.ls_all_srt.Contains(keyword));
+                var videoIdList = keywordInVideoList.Select(item => item.ls_id).Skip((page-1)* _searchPageSize).Take(_searchPageSize).ToList();
+                // 取得查詢總數量
+                var totalCount = keywordInVideoList.Count();
+                // 查詢影片字幕
+                var srtList = _liveStreamingSrtRepository.GetByLikeKeyword(videoIdList, keyword, connection);
+                var srtDict = new Dictionary<string, SearchSrtVideoResponse>();
+                foreach (var srtModel in srtList)
+                {
+                    string videoGuid = _cacheVideoDict[srtModel.lss_ls_id].ls_guid;
+                    var srtData = new SrtResponse
+                    {
+                        Context = srtModel.lss_text,
+                        SrtStartTimeSeconds = (int)TimeSpan.ParseExact(srtModel.lss_start, _srtTimeFormat, null).TotalSeconds,
+                        SrtStartTime = srtModel.lss_start,
+                        SrtEndTime = srtModel.lss_end,
+                    };
+                    if (srtDict.ContainsKey(videoGuid) == false)
+                    {
+                        srtDict.Add(videoGuid, new SearchSrtVideoResponse
+                        {
+                            VideoTitle = _cacheVideoDict[srtModel.lss_ls_id].ls_title,
+                            VideoGuid = videoGuid,
+                            VideoUrl = _cacheVideoDict[srtModel.lss_ls_id].ls_url,
+                            LiveTime = _cacheVideoDict[srtModel.lss_ls_id].ls_livetime.ToString("yyyy-MM-dd"),
+                            SrtList = new List<SrtResponse>
+                            {
+                                srtData
+                            }
+                        });
+                        continue;
+                    }
+                    srtDict[videoGuid].SrtList.Add(srtData);
+                }
+
                 return new SearchSrtResponse
                 {
                     TotalPage = _commonTool.GetTotalPage(totalCount, _searchPageSize),

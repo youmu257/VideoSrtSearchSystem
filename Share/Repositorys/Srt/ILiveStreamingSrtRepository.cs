@@ -10,6 +10,7 @@ namespace Share.Repositorys.Srt
         int DeleteByVideoId(MySqlConnection connection, MySqlTransaction trans, LsId videoId);
         List<TwoModelData<LiveStreamingModel, LiveStreamingSrtModel>> GetByLikeKeyword(string keyword, int page, int pageSize, MySqlConnection connection);
         int GetTotalPageByLikeKeyword(string keyword, MySqlConnection connection);
+        List<LiveStreamingSrtModel> GetByLikeKeyword(List<LsId> lsIdList, string keyword, MySqlConnection connection);
         List<LiveStreamingSrtModel> GetByVideoId(LsId videoId, MySqlConnection connection);
     }
 }

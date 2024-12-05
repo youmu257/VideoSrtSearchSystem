@@ -67,11 +67,11 @@ namespace VideoSrtSearchSystem.Controllers
         }
 
         /// <summary>
-        /// 查詢字幕功能
+        /// 查詢字幕功能 全部從DB
         /// </summary>
         [HttpGet]
-        [Route("search")]
-        public IActionResult SearchSrt([FromQuery] SearchSrtRequest request)
+        [Route("searchFromDb")]
+        public IActionResult SearchSrtFromDb([FromQuery] SearchSrtRequest request)
         {
             try
             {
@@ -81,6 +81,29 @@ namespace VideoSrtSearchSystem.Controllers
                 }
 
                 var response = _srtService.SearchSrt(request.Keyword, request.Page);
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), response.VideoList);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResponse(ex);
+            }
+        }
+
+        /// <summary>
+        /// 查詢字幕功能 從記憶體
+        /// </summary>
+        [HttpGet]
+        [Route("search")]
+        public IActionResult SearchSrtFromMemory([FromQuery] SearchSrtRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Keyword))
+                {
+                    return ParameterIsRequired("Keyword");
+                }
+
+                var response = _srtService.SearchSrtByMemory(request.Keyword, request.Page);
                 return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), response.VideoList);
             }
             catch (Exception ex)
