@@ -17,5 +17,17 @@ namespace Share.DTO.Request.Srt
         /// </summary>
         [JsonPropertyName("page")]
         public int Page { get; set; } = 1;
+
+        /// <summary>
+        /// 開始時間
+        /// </summary>
+        [JsonPropertyName("start")]
+        public string Start { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 結束時間
+        /// </summary>
+        [JsonPropertyName("end")]
+        public string End { get; set; } = string.Empty;
     }
 }

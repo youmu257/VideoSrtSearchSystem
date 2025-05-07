@@ -56,7 +56,6 @@ builder.Services.AddSingleton<ILiveStreamingRepository, LiveStreamingRepository>
 builder.Services.AddSingleton<ILiveStreamingSrtRepository, LiveStreamingSrtRepository>();
 #endregion
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Share.DTO.Request.Srt;
 using Share.DTO.Request.Video;
 using Share.Models;
 using Share.Services.Srt;
@@ -28,16 +29,24 @@ namespace VideoSrtSearchSystem.Controllers
 
         [HttpGet]
         [Route("srtSearch")]
-        public IActionResult SrtSearch(string? keyword, int page = 1)
+        public IActionResult SrtSearch(string? keyword, int page = 1, string start = "", string end = "")
         {
             if (string.IsNullOrEmpty(keyword) == false)
             {
-                var response = _srtService.SearchSrt(keyword, page);
+                var response = _srtService.SearchSrtByMemory(new SearchSrtRequest
+                {
+                    Keyword = keyword,
+                    Page = page,
+                    Start = start,
+                    End = end,
+                });
                 ViewData["VideoList"] = response.VideoList;
                 ViewData["TotalPage"] = response.TotalPage;
             }
             ViewData["Keyword"] = keyword;
             ViewData["Page"] = page;
+            ViewData["Start"] = start;
+            ViewData["End"] = end;
 
             return View("srtSearch");
         }

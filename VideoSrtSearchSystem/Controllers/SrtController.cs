@@ -3,6 +3,7 @@ using Share.Const;
 using Share.DTO.Request.Srt;
 using Share.Exceptions;
 using Share.Services.Srt;
+using Share.Tool;
 using Share.Tool.Language;
 using System.Web;
 
@@ -12,6 +13,7 @@ namespace VideoSrtSearchSystem.Controllers
     [Route("api/srt")]
     public class SrtController(
         ISrtService _srtService,
+        ICommonTool _commonTool,
         ILogger<SrtController> _logger) : BaseController<SrtController>(_logger)
     {
         /// <summary>
@@ -102,8 +104,18 @@ namespace VideoSrtSearchSystem.Controllers
                 {
                     return ParameterIsRequired("Keyword");
                 }
+                // 檢查 start 日期格式
+                if (!_commonTool.IsValidDateFormat(request.Start))
+                {
+                    return ParameterFormatError("Start");
+                }
+                // 檢查 end 日期格式
+                if (!_commonTool.IsValidDateFormat(request.End))
+                {
+                    return ParameterFormatError("End");
+                }
 
-                var response = _srtService.SearchSrtByMemory(request.Keyword, request.Page);
+                var response = _srtService.SearchSrtByMemory(request);
                 return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), response.VideoList);
             }
             catch (Exception ex)

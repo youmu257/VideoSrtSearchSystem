@@ -177,7 +177,7 @@ namespace Share.Services.Srt
         /// <summary>
         /// 從記憶體中抓關鍵字在哪幾個影片中，去從DB中抓對應字幕
         /// </summary>
-        public SearchSrtResponse SearchSrtByMemory(string keyword, int page)
+        public SearchSrtResponse SearchSrtByMemory(SearchSrtRequest request)
         {
             try
             {
@@ -194,12 +194,20 @@ namespace Share.Services.Srt
                         ls_livetime = item.ls_livetime,
                     });
                 }
-                var keywordInVideoList = _cacheAllSrtList.Where(item => item.ls_all_srt.Contains(keyword));
-                var videoIdList = keywordInVideoList.Select(item => item.ls_id).Skip((page-1)* _searchPageSize).Take(_searchPageSize).ToList();
+                var keywordInVideoList = _cacheAllSrtList.Where(item =>
+                    item.ls_all_srt.Contains(request.Keyword) &&
+                    _commonTool.CheckInTimeRage(item.ls_livetime, request.Start, request.End)
+                );
+
+                var videoIdList = keywordInVideoList
+                    .Select(item => item.ls_id)
+                    .Skip((request.Page - 1) * _searchPageSize)
+                    .Take(_searchPageSize)
+                    .ToList();
                 // 取得查詢總數量
                 var totalCount = keywordInVideoList.Count();
                 // 查詢影片字幕
-                var srtList = _liveStreamingSrtRepository.GetByLikeKeyword(videoIdList, keyword, connection);
+                var srtList = _liveStreamingSrtRepository.GetByLikeKeyword(videoIdList, request.Keyword, connection);
                 var srtDict = new Dictionary<string, SearchSrtVideoResponse>();
                 foreach (var srtModel in srtList)
                 {

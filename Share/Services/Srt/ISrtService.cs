@@ -7,7 +7,7 @@ namespace Share.Services.Srt
     {
         string ImportSrt(ImportSrtRequest request);
         SearchSrtResponse SearchSrt(string keyword, int page);
-        SearchSrtResponse SearchSrtByMemory(string keyword, int page);
+        SearchSrtResponse SearchSrtByMemory(SearchSrtRequest request);
         DownloadSrtResponse DownloadSrt(string videoGuid);
     }
 }
