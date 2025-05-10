@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using Share.DTO.Request.Video;
+using Share.DTO.Request;
 using Share.DTO.Response.Video;
 using Share.Repositorys.LiveStraming;
 using Share.Tool;
@@ -7,16 +7,16 @@ using Share.Tool.MySQL;
 
 namespace Share.Services.Video
 {
-    public class VideoService(
+    public class LiveStreamingService(
         ILiveStreamingRepository _liveStreamingRepository,
         IMySQLConnectionProvider _mySQLConnectionProvider,
         ICommonTool _commonTool,
-        ILogger<VideoService> _logger
-    ) : IVideoService
+        ILogger<LiveStreamingService> _logger
+    ) : ILiveStreamingService
     {
         private static readonly int pageSize = 25;
 
-        public GetAllVideoResponse GetAllVideo(GetAllVideoRequest request)
+        public GetAllVideoResponse GetAllVideo(SearchRequest request)
         {
             try
             {

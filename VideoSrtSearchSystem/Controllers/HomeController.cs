@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Share.DTO.Request;
 using Share.DTO.Request.Srt;
-using Share.DTO.Request.Video;
 using Share.Models;
 using Share.Services.Srt;
 using Share.Services.Video;
@@ -11,7 +11,7 @@ namespace VideoSrtSearchSystem.Controllers
     //[EnableCors("AllOpen")]
     [ApiController]
     [Route("")]
-    public class HomeController(IVideoService _videoService, ISrtService _srtService) : Controller
+    public class HomeController(ILiveStreamingService _liveStreamingService, ISrtService _srtService) : Controller
     {
         [HttpGet]
         public IActionResult Home(string keyword = "", int page = 1)
@@ -23,12 +23,12 @@ namespace VideoSrtSearchSystem.Controllers
         [Route("home")]
         public IActionResult SearchVideo(string keyword = "", int page = 1)
         {
-            var request = new GetAllVideoRequest
+            var request = new SearchRequest
             {
                 Keyword = keyword,
                 Page = page,
             };
-            var videoResponse = _videoService.GetAllVideo(request);
+            var videoResponse = _liveStreamingService.GetAllVideo(request);
             ViewData["VideoList"] = videoResponse.VideoList;
             ViewData["TotalPage"] = videoResponse.TotalPage;
             return View("home");

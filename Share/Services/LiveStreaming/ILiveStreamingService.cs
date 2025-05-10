@@ -1,11 +1,11 @@
-﻿using Share.DTO.Request.Video;
+﻿using Share.DTO.Request;
 using Share.DTO.Response.Video;
 
 namespace Share.Services.Video
 {
-    public interface IVideoService
+    public interface ILiveStreamingService
     {
-        GetAllVideoResponse GetAllVideo(GetAllVideoRequest request);
+        GetAllVideoResponse GetAllVideo(SearchRequest request);
         GetOneVideoInfoResponse GetOneVideoInfo(string guid);
     }
 }

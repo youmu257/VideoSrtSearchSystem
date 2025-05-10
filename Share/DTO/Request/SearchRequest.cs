@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Text.Json.Serialization;
 
-namespace Share.DTO.Request.Video
+namespace Share.DTO.Request
 {
     [BindRequired]
-    public class GetAllVideoRequest
+    public class SearchRequest
     {
         /// <summary>
-        /// 標題查詢
+        /// 關鍵字查詢
         /// </summary>
         [JsonPropertyName("keyword")]
         public string Keyword { get; set; } = string.Empty;

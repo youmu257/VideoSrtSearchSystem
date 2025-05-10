@@ -50,7 +50,7 @@ builder.Services.AddSingleton<ICommonTool, CommonTool>();
 
 #region Service 依賴注入
 builder.Services.AddSingleton<ISrtService, SrtService>();
-builder.Services.AddSingleton<IVideoService, VideoService>();
+builder.Services.AddSingleton<ILiveStreamingService, LiveStreamingService>();
 #endregion
 
 #region Repository 依賴注入

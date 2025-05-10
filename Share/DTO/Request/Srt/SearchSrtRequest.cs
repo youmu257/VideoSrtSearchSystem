@@ -4,20 +4,8 @@ using System.Text.Json.Serialization;
 namespace Share.DTO.Request.Srt
 {
     [BindRequired]
-    public class SearchSrtRequest
+    public class SearchSrtRequest : SearchRequest
     {
-        /// <summary>
-        /// 關鍵字
-        /// </summary>
-        [JsonPropertyName("keyword")]
-        public string Keyword { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 分頁
-        /// </summary>
-        [JsonPropertyName("page")]
-        public int Page { get; set; } = 1;
-
         /// <summary>
         /// 開始時間
         /// </summary>

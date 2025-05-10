@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Share.Const;
-using Share.DTO.Request.Video;
+using Share.DTO.Request;
 using Share.Services.Video;
 using Share.Tool.Language;
 
@@ -9,7 +9,7 @@ namespace VideoSrtSearchSystem.Controllers
     [ApiController]
     [Route("api/video")]
     public class VideoController(
-        IVideoService _videoService,
+        ILiveStreamingService _videoService,
         ILogger<VideoController> _logger) : BaseController<VideoController>(_logger)
     {
         /// <summary>
@@ -17,7 +17,7 @@ namespace VideoSrtSearchSystem.Controllers
         /// </summary>
         [HttpGet]
         [Route("all")]
-        public IActionResult GetAllVideo(GetAllVideoRequest request)
+        public IActionResult GetAllVideo(SearchRequest request)
         {
             try
             {
