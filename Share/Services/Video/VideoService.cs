@@ -23,7 +23,7 @@ namespace Share.Services.Video
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
                 // 取得影片列表
                 var liveStramingList = _liveStreamingRepository.GetAll(request.Keyword, request.Page - 1, pageSize, connection);
-                var totalCount = _liveStreamingRepository.GetCount(connection);
+                var totalCount = _liveStreamingRepository.GetCount(request.Keyword, connection);
                 return new GetAllVideoResponse
                 {
                     TotalPage = _commonTool.GetTotalPage(totalCount, pageSize),

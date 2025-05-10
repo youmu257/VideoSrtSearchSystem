@@ -14,16 +14,24 @@ namespace VideoSrtSearchSystem.Controllers
     public class HomeController(IVideoService _videoService, ISrtService _srtService) : Controller
     {
         [HttpGet]
-        public IActionResult Index(int page = 1)
+        public IActionResult Home(string keyword = "", int page = 1)
+        {
+            return SearchVideo(keyword, page);
+        }
+
+        [HttpGet]
+        [Route("home")]
+        public IActionResult SearchVideo(string keyword = "", int page = 1)
         {
             var request = new GetAllVideoRequest
             {
+                Keyword = keyword,
                 Page = page,
             };
             var videoResponse = _videoService.GetAllVideo(request);
             ViewData["VideoList"] = videoResponse.VideoList;
             ViewData["TotalPage"] = videoResponse.TotalPage;
-            return View();
+            return View("home");
         }
 
 

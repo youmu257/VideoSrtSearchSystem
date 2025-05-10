@@ -57,7 +57,7 @@ namespace Share.Repositorys.LiveStraming
             }
         }
 
-        public int GetCount(MySqlConnection? connection = null)
+        public int GetCount(string keyword, MySqlConnection? connection = null)
         {
             try
             {
@@ -65,8 +65,12 @@ namespace Share.Repositorys.LiveStraming
                 {
                     nameof(LiveStreamingModel.ls_id),
                 };
-                var query = new Query(LiveStreamingModel.TableName)
-                    .AsCount(cols);
+                var query = new Query(LiveStreamingModel.TableName);
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    query = query.WhereLike(nameof(LiveStreamingModel.ls_title), $"%{keyword}%");
+                }
+                query = query.AsCount(cols);
                 return _mySqlTool.Count(connection, query);
             }
             catch (Exception)
