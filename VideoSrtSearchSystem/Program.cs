@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Builder;
 using Serilog;
 using Share.Config.Appsettings;
 using Share.Const;
 using Share.Repositorys.LiveStraming;
 using Share.Repositorys.Srt;
+using Share.Repositorys.Tag;
 using Share.Services.Srt;
+using Share.Services.Tag;
 using Share.Services.Video;
 using Share.Tool;
 using Share.Tool.Language;
@@ -51,11 +52,14 @@ builder.Services.AddSingleton<ICommonTool, CommonTool>();
 #region Service 依賴注入
 builder.Services.AddSingleton<ISrtService, SrtService>();
 builder.Services.AddSingleton<ILiveStreamingService, LiveStreamingService>();
+builder.Services.AddSingleton<ITagService, TagService>();
 #endregion
 
 #region Repository 依賴注入
 builder.Services.AddSingleton<ILiveStreamingRepository, LiveStreamingRepository>();
 builder.Services.AddSingleton<ILiveStreamingSrtRepository, LiveStreamingSrtRepository>();
+builder.Services.AddSingleton<ILiveStreamingTagRepository, LiveStreamingTagRepository>();
+builder.Services.AddSingleton<ILiveStreamingTagTypeRepository, LiveStreamingTagTypeRepository>();
 #endregion
 
 var app = builder.Build();

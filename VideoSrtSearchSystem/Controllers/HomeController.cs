@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Share.DTO.Request;
 using Share.DTO.Request.Srt;
+using Share.DTO.Request.Tag;
 using Share.Models;
 using Share.Services.Srt;
+using Share.Services.Tag;
 using Share.Services.Video;
 using System.Diagnostics;
 
@@ -11,7 +13,11 @@ namespace VideoSrtSearchSystem.Controllers
     //[EnableCors("AllOpen")]
     [ApiController]
     [Route("")]
-    public class HomeController(ILiveStreamingService _liveStreamingService, ISrtService _srtService) : Controller
+    public class HomeController(
+        ILiveStreamingService _liveStreamingService,
+        ISrtService _srtService,
+        ITagService _tagService
+    ) : Controller
     {
         [HttpGet]
         public IActionResult Home(string keyword = "", int page = 1)
@@ -57,6 +63,26 @@ namespace VideoSrtSearchSystem.Controllers
             ViewData["End"] = end;
 
             return View("srtSearch");
+        }
+
+        [HttpGet]
+        [Route("tagSearch")]
+        public IActionResult TagSearch(int type = 0, string keyword = "", int page = 1)
+        {
+            var request = new SearchTagRequest
+            {
+                Type = type,
+                Keyword = keyword,
+                Page = page,
+            };
+            var tagResponse = _tagService.SearchTags(request);
+            ViewData["TagList"] = tagResponse.TagList;
+            ViewData["TagTypeList"] = tagResponse.TagTypeList;
+            ViewData["TotalPage"] = tagResponse.TotalPage;
+            ViewData["Keyword"] = keyword;
+            ViewData["TagType"] = type;
+            ViewData["Page"] = page;
+            return View("tag");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

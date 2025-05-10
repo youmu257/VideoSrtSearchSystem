@@ -1,0 +1,132 @@
+﻿@using Share.DTO.Response.Tag
+@{
+    ViewData["Title"] = "Tag Search";
+    var tagList = ViewData["TagList"] as List<TagResponse>; // 查詢結果
+    var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>; // 標籤列表
+    string keyword = ViewData["Keyword"] as string;
+    int tagType = ViewData["TagType"] == null ? 0 : (int)ViewData["TagType"];
+    int page = ViewData["Page"] == null ? 1 : (int)ViewData["Page"];
+    int totalPage = ViewData["TotalPage"] == null ? 1 : (int)ViewData["TotalPage"];
+}
+
+<div class="container">
+    <h1 class="my-4">Tag Search</h1>
+
+    <!-- 查詢表單 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <!-- 下拉式選單 -->
+                <div class="col-md-4 mb-3">
+                    <label for="typeSelect" class="form-label">類型</label>
+                    <select id="typeSelect" name="type" class="form-select">
+                        <option value="">請選擇類型</option>
+                        @foreach (var type in tagTypeList)
+                        {
+                            <option value="@type.Id" selected="@(type.Id.Value == tagType ? "selected" : null)">@type.TypeName</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- 關鍵字輸入欄位 -->
+                <div class="col-md-6 mb-3">
+                    <label for="keywordInput" class="form-label">關鍵字</label>
+                    <input type="text" id="searchQuery" name="keyword" class="form-control" placeholder="輸入關鍵字" value="@keyword" />
+                </div>
+
+                <!-- 查詢按鈕 -->
+                <div class="text-center">
+                    <button class="btn btn-primary" onclick="redirectToSearchResults()">搜尋</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查詢結果 -->
+    @if (tagList != null && tagList.Count > 0)
+    {
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">查詢結果</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tag Name</th>
+                            <th>Tag Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tag in tagList)
+                        {
+                            <tr>
+                                <td><strong>@tag.TagName</strong></td>
+                                <td>@tag.TagType</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning" role="alert">
+            沒有找到符合條件的資料。
+        </div>
+    }
+    <nav aria-label="Page navigation" class="pagination-wrapper mt-3">
+        <ul class="pagination">
+            <li page-item>
+                <a class="page-link pagination-link" href="#" data-page="@(page - 1)" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (int i = 1; i <= totalPage; i++)
+            {
+                <li page-item>
+                    <a class="page-link pagination-link" href="#" data-page="@i">
+                        @i
+                    </a>
+                </li>
+            }
+            <li page-item>
+                <a class="page-link pagination-link" href="#" data-page="@(page + 1)" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+<script type="text/javascript">
+    function redirectToSearchResults(pageNumber) {
+        var query = document.getElementById("searchQuery").value;
+        var tagType = document.getElementById("typeSelect").value;
+
+        var encodedQuery = encodeURIComponent(query);
+
+        // 構建URL參數
+        var params = 'keyword=' + encodedQuery;
+        if (tagType) {
+            params += '&type=' + encodeURIComponent(tagType);
+        }
+
+        // 如果提供了頁碼，將其添加到URL，否則使用預設值1
+        var pageParam = pageNumber ? '&page=' + pageNumber : '';
+
+        window.location.href = 'tagSearch?' + params + pageParam;
+    }
+
+    // 為分頁連結添加事件監聽器
+    document.addEventListener('DOMContentLoaded', function() {
+        var paginationLinks = document.querySelectorAll('.pagination-link');
+        paginationLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // 阻止預設行為
+                var page = this.getAttribute('data-page');
+                redirectToSearchResults(page);
+            });
+        });
+    });
+</script>
