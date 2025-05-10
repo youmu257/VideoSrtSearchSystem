@@ -1,0 +1,318 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "SrtController API",
+        "description": "提供字幕匯入、查詢與下載功能的 API。",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/srt/import": {
+            "post": {
+                "summary": "匯入字幕",
+                "description": "匯入單一字幕。",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportSrtRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "匯入成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "缺少必要參數或格式錯誤"
+                    }
+                }
+            }
+        },
+        "/api/srt/import/list": {
+            "post": {
+                "summary": "匯入多個字幕",
+                "description": "匯入多個字幕。",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ImportSrtRequest"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "匯入成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "缺少必要參數或格式錯誤"
+                    }
+                }
+            }
+        },
+        "/api/srt/search": {
+            "get": {
+                "summary": "查詢字幕 (從記憶體)",
+                "description": "從記憶體中查詢字幕。",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "查詢關鍵字"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "description": "分頁 (預設為 1)"
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2023-10-01"
+                        },
+                        "description": "開始時間 (格式: yyyy-MM-dd)"
+                    },
+                    {
+                        "name": "end",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2023-10-31"
+                        },
+                        "description": "結束時間 (格式: yyyy-MM-dd)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查詢成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchSrtResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "缺少必要參數或格式錯誤"
+                    }
+                }
+            }
+        },
+        "/api/srt/searchFromDb": {
+            "get": {
+                "summary": "查詢字幕 (從資料庫)",
+                "description": "從資料庫中查詢字幕。",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "查詢關鍵字"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "description": "分頁 (預設為 1)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查詢成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchSrtResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "缺少必要參數或格式錯誤"
+                    }
+                }
+            }
+        },
+        "/api/srt/download": {
+            "get": {
+                "summary": "下載字幕",
+                "description": "下載字幕檔案。",
+                "parameters": [
+                    {
+                        "name": "videoGuid",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "影片的唯一識別碼"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "下載成功",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "缺少必要參數或格式錯誤"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ImportSrtRequest": {
+                "type": "object",
+                "properties": {
+                    "videoTitle": {
+                        "type": "string",
+                        "description": "影片標題"
+                    },
+                    "videoUrl": {
+                        "type": "string",
+                        "description": "影片連結"
+                    },
+                    "srtPath": {
+                        "type": "string",
+                        "description": "字幕檔路徑"
+                    },
+                    "liveTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "直播時間"
+                    }
+                },
+                "required": [ "videoTitle", "videoUrl", "srtPath" ]
+            },
+            "SearchSrtResponse": {
+                "type": "object",
+                "properties": {
+                    "totalPage": {
+                        "type": "integer",
+                        "description": "總頁數"
+                    },
+                    "videoList": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SearchSrtVideoResponse"
+                        }
+                    }
+                }
+            },
+            "SearchSrtVideoResponse": {
+                "type": "object",
+                "properties": {
+                    "videoTitle": {
+                        "type": "string",
+                        "description": "影片標題"
+                    },
+                    "videoGuid": {
+                        "type": "string",
+                        "description": "影片唯一識別碼"
+                    },
+                    "videoUrl": {
+                        "type": "string",
+                        "description": "影片連結"
+                    },
+                    "liveTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "直播時間"
+                    },
+                    "srtList": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SrtResponse"
+                        }
+                    }
+                }
+            },
+            "SrtResponse": {
+                "type": "object",
+                "properties": {
+                    "srtStartTime": {
+                        "type": "string",
+                        "description": "字幕開始時間"
+                    },
+                    "srtEndTime": {
+                        "type": "string",
+                        "description": "字幕結束時間"
+                    },
+                    "context": {
+                        "type": "string",
+                        "description": "字幕內容"
+                    }
+                }
+            },
+            "ApiResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "回應代碼"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "回應訊息"
+                    },
+                    "result": {
+                        "type": "object",
+                        "description": "回應結果"
+                    }
+                }
+            }
+        }
+    }
+}

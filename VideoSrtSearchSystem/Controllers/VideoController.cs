@@ -34,6 +34,5 @@ namespace VideoSrtSearchSystem.Controllers
                 return ExceptionResponse(ex);
             }
         }
-
     }
 }

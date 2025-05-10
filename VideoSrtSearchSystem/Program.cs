@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using Serilog;
 using Share.Config.Appsettings;
 using Share.Const;
@@ -26,6 +27,7 @@ builder.Services.AddControllersWithViews();
 //                .AllowCredentials();
 //        });
 //});
+builder.Services.AddOpenApiDocument();
 
 #region config
 builder.Services.Configure<SrtConfig>(builder.Configuration.GetSection("SrtConfig"));
@@ -86,5 +88,13 @@ app.Use(async (context, next) =>
 });
 
 app.MapControllers();
+// 啟動 OpenAPI 文件
+app.UseOpenApi();
+// 啟動 Swagger UI
+app.UseSwaggerUi(settings =>
+{
+    //settings.Path = "/api-docs"; // 自定義 Swagger UI 的路徑
+    settings.DocumentPath = "/swagger.json"; // 指定 OpenAPI 文件的路徑
+});
 
 app.Run();
