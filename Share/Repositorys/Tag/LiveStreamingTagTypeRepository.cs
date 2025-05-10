@@ -27,5 +27,24 @@ namespace Share.Repositorys.Tag
                 throw;
             }
         }
+
+        public LiveStreamingTagTypeModel GetByType(LsttType type, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingTagTypeModel.lstt_type),
+                };
+                var query = new Query(LiveStreamingTagTypeModel.TableName)
+                    .Where(nameof(LiveStreamingTagTypeModel.lstt_type), type.Value)
+                    .Select(cols);
+                return _mySqlTool.SelectOne<LiveStreamingTagTypeModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

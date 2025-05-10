@@ -29,7 +29,7 @@ namespace Share.Models.LiveStraming
         /// 4: 人員
         /// 5: 場次
         /// </summary>
-        public LsttId lst_type { get; set; } = LsttId.From(0);
+        public LsttType lst_type { get; set; } = LsttType.From(0);
 
         public DateTime lst_createtime { get; set; }
 
@@ -57,7 +57,7 @@ namespace Share.Models.LiveStraming
                         lst_name = dr.GetString(i);
                         break;
                     case nameof(lst_type):
-                        lst_type = LsttId.From(dr.GetUInt32(i));
+                        lst_type = LsttType.From(dr.GetUInt32(i));
                         break;
                     case nameof(lst_createtime):
                         lst_createtime = dr.GetDateTime(i);

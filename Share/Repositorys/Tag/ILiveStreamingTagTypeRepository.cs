@@ -6,5 +6,6 @@ namespace Share.Repositorys.Tag
     public interface ILiveStreamingTagTypeRepository
     {
         List<LiveStreamingTagTypeModel> GetAll(MySqlConnection connection);
+        LiveStreamingTagTypeModel GetByType(LsttType type, MySqlConnection connection);
     }
 }

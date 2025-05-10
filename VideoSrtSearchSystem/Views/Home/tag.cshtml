@@ -4,13 +4,16 @@
     var tagList = ViewData["TagList"] as List<TagResponse>; // 查詢結果
     var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>; // 標籤列表
     string keyword = ViewData["Keyword"] as string;
-    int tagType = ViewData["TagType"] == null ? 0 : (int)ViewData["TagType"];
+    uint tagType = ViewData["TagType"] == null ? 0 : (uint)ViewData["TagType"];
     int page = ViewData["Page"] == null ? 1 : (int)ViewData["Page"];
     int totalPage = ViewData["TotalPage"] == null ? 1 : (int)ViewData["TotalPage"];
 }
 
 <div class="container">
-    <h1 class="my-4">Tag Search</h1>
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h1>Tag Search</h1>
+        <a href="AddTag" class="btn btn-success">新增</a>
+    </div>
 
     <!-- 查詢表單 -->
     <div class="card mb-4">

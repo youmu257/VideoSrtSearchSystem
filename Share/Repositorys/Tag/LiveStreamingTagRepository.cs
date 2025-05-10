@@ -9,7 +9,7 @@ namespace Share.Repositorys.Tag
         IMySqlTool _mySqlTool
     ) : ILiveStreamingTagRepository
     {
-        public List<LiveStreamingTagModel> GetByTypeAndKeyword(int type, string keyword, int page, int pageSize, MySqlConnection connection)
+        public List<LiveStreamingTagModel> GetByTypeAndKeyword(LsttType type, string keyword, int page, int pageSize, MySqlConnection connection)
         {
             try
             {
@@ -20,9 +20,9 @@ namespace Share.Repositorys.Tag
                     nameof(LiveStreamingTagModel.lst_type),
                 };
                 var query = new Query(LiveStreamingTagModel.TableName);
-                if (type > 0)
+                if (type.Value > 0)
                 {
-                    query = query.Where(nameof(LiveStreamingTagModel.lst_type), type);
+                    query = query.Where(nameof(LiveStreamingTagModel.lst_type), type.Value);
                 }
                 if (!string.IsNullOrEmpty(keyword))
                 {
@@ -40,7 +40,27 @@ namespace Share.Repositorys.Tag
             }
         }
 
-        public int GetCount(int type, string keyword, MySqlConnection? connection = null)
+        public LiveStreamingTagModel GetByTypeAndKeyword(LsttType type, string keyword, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingTagModel.lst_id),
+                };
+                var query = new Query(LiveStreamingTagModel.TableName)
+                    .Where(nameof(LiveStreamingTagModel.lst_type), type.Value)
+                    .WhereLike(nameof(LiveStreamingTagModel.lst_name), $"%{keyword}%")
+                    .Select(cols);
+                return _mySqlTool.SelectOne<LiveStreamingTagModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public int GetCount(LsttType type, string keyword, MySqlConnection? connection = null)
         {
             try
             {
@@ -49,9 +69,9 @@ namespace Share.Repositorys.Tag
                     nameof(LiveStreamingTagModel.lst_id),
                 };
                 var query = new Query(LiveStreamingTagModel.TableName);
-                if (type > 0)
+                if (type.Value > 0)
                 {
-                    query = query.Where(nameof(LiveStreamingTagModel.lst_type), type);
+                    query = query.Where(nameof(LiveStreamingTagModel.lst_type), type.Value);
                 }
                 if (!string.IsNullOrEmpty(keyword))
                 {
@@ -66,5 +86,28 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public uint Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingTagModel model)
+        {
+            try
+            {
+                var insertCols = new string[]
+                {
+                    nameof(LiveStreamingTagModel.lst_name),
+                    nameof(LiveStreamingTagModel.lst_type),
+                };
+                var insertData = new List<object>
+                {
+                    model.lst_name,
+                    model.lst_type.Value,
+                };
+                var query = new Query(LiveStreamingTagModel.TableName)
+                    .AsInsert(insertCols, insertData);
+                return _mySqlTool.Insert(connection, trans, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MySqlX.XDevAPI.Common;
 using Share.Const;
+using Share.Exceptions;
 using Share.Tool.Language;
 using System.Diagnostics;
 using System.Reflection;
@@ -86,6 +88,10 @@ namespace VideoSrtSearchSystem.Controllers
         protected ObjectResult ExceptionResponse(Exception ex)
         {
             var stackTrace = new StackTrace();
+            if (ex is MyException myEx)
+            {
+                return Ok(new { myEx.Code, myEx.Message });
+            }
             // Exception 不該回傳回去，只做 Log 紀錄
             _logger.LogError(ex.ToString(), stackTrace);
             return ExceptionResponse("System error");

@@ -30,7 +30,7 @@ namespace Share.DTO.Response.Tag
     public class TagTypeResponse
     {
         [JsonPropertyName("id")]
-        public LsttId Id { get; set; } = LsttId.From(0);
+        public LsttType Id { get; set; } = LsttType.From(0);
 
         [JsonPropertyName("name")]
         public string TypeName { get; set; } = string.Empty;

@@ -3,6 +3,7 @@ using Share.DTO.Request;
 using Share.DTO.Request.Srt;
 using Share.DTO.Request.Tag;
 using Share.Models;
+using Share.Models.LiveStraming;
 using Share.Services.Srt;
 using Share.Services.Tag;
 using Share.Services.Video;
@@ -67,11 +68,11 @@ namespace VideoSrtSearchSystem.Controllers
 
         [HttpGet]
         [Route("tagSearch")]
-        public IActionResult TagSearch(int type = 0, string keyword = "", int page = 1)
+        public IActionResult TagSearch(uint type = 0, string keyword = "", int page = 1)
         {
             var request = new SearchTagRequest
             {
-                Type = type,
+                Type = LsttType.From(type),
                 Keyword = keyword,
                 Page = page,
             };
@@ -83,6 +84,28 @@ namespace VideoSrtSearchSystem.Controllers
             ViewData["TagType"] = type;
             ViewData["Page"] = page;
             return View("tag");
+        }
+
+        [HttpGet]
+        [Route("addTag")]
+        public IActionResult AddTag()
+        {
+            var tagTypeList = _tagService.GetTagType();
+            ViewData["TagTypeList"] = tagTypeList;
+            return View("addTag");
+        }
+
+        [HttpGet]
+        [Route("insertTag")]
+        public IActionResult InsertTag(uint type, string name)
+        {
+            var request = new AddTagRequest
+            {
+                TagType = LsttType.From(type),
+                TagName = name,
+            };
+            _tagService.InsertTag(request);
+            return TagSearch(type, name);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

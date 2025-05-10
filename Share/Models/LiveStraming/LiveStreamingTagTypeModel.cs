@@ -5,7 +5,7 @@ using Vogen;
 namespace Share.Models.LiveStraming
 {
     [ValueObject<uint>]
-    public partial struct LsttId;
+    public partial struct LsttType;
 
     /// <summary>
     /// 影片標籤
@@ -14,7 +14,7 @@ namespace Share.Models.LiveStraming
     {
         public static string TableName = "live_streaming_tag_type";
 
-        public LsttId lstt_type { get; set; } = LsttId.From(0);
+        public LsttType lstt_type { get; set; } = LsttType.From(0);
 
         /// <summary>
         /// 標籤名稱
@@ -41,7 +41,7 @@ namespace Share.Models.LiveStraming
                 switch (dr.GetName(i))
                 {
                     case nameof(lstt_type):
-                        lstt_type = LsttId.From(dr.GetUInt32(i));
+                        lstt_type = LsttType.From(dr.GetUInt32(i));
                         break;
                     case nameof(lstt_name):
                         lstt_name = dr.GetString(i);

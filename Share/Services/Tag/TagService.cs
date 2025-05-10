@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
+using Share.Const;
 using Share.DTO.Request.Tag;
 using Share.DTO.Response.Tag;
+using Share.Exceptions;
+using Share.Models.LiveStraming;
 using Share.Repositorys.Tag;
 using Share.Services.Video;
 using Share.Tool;
@@ -44,6 +47,65 @@ namespace Share.Services.Tag
                         TypeName = item.lstt_name,
                     }).ToList(),
                 };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        public List<TagTypeResponse> GetTagType()
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 取得標邊類型列表
+                var tagTypeList = _liveStreamingTagTypeRepository.GetAll(connection);
+
+                return tagTypeList.Select(item => new TagTypeResponse
+                {
+                    Id = item.lstt_type,
+                    TypeName = item.lstt_name,
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        public void InsertTag(AddTagRequest request)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 檢查標籤類型
+                var tagTypeModel = _liveStreamingTagTypeRepository.GetByType(request.TagType, connection);
+                if (tagTypeModel.lstt_type.Value == 0)
+                {
+                    throw new MyException(ResponseCode.TAG_TYPE_NOT_EXIST);
+                }
+                // 檢查標籤是否已存在
+                var tagModel = _liveStreamingTagRepository.GetByTypeAndKeyword(request.TagType, request.TagName, connection);
+                if (tagModel.lst_id.Value > 0)
+                {
+                    throw new MyException(ResponseCode.TAG_IS_EXIST);
+                }
+                // 新增標籤
+                var insertModel = new LiveStreamingTagModel
+                {
+                    lst_name = request.TagName,
+                    lst_type = request.TagType,
+                };
+                var trans = connection.BeginTransaction();
+                _liveStreamingTagRepository.Insert(connection, trans, insertModel);
+                trans.Commit();
+            }
+            catch (MyException ex)
+            {
+                throw;
             }
             catch (Exception ex)
             {

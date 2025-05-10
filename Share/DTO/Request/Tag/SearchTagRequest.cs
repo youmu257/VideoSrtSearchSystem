@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Share.Models.LiveStraming;
+using System.Text.Json.Serialization;
 
 namespace Share.DTO.Request.Tag
 {
@@ -8,6 +9,6 @@ namespace Share.DTO.Request.Tag
         /// 標籤類型
         /// </summary>
         [JsonPropertyName("type")]
-        public int Type { get; set; }
+        public LsttType Type { get; set; } = LsttType.From(0);
     }
 }
