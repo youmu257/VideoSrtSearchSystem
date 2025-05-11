@@ -60,6 +60,7 @@ builder.Services.AddSingleton<ILiveStreamingRepository, LiveStreamingRepository>
 builder.Services.AddSingleton<ILiveStreamingSrtRepository, LiveStreamingSrtRepository>();
 builder.Services.AddSingleton<ILiveStreamingTagRepository, LiveStreamingTagRepository>();
 builder.Services.AddSingleton<ILiveStreamingTagTypeRepository, LiveStreamingTagTypeRepository>();
+builder.Services.AddSingleton<ILiveStreamingTagMappingRepository, LiveStreamingTagMappingRepository>();
 #endregion
 
 var app = builder.Build();

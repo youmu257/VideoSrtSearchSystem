@@ -12,5 +12,6 @@ namespace Share.Repositorys.LiveStraming
         LiveStreamingModel GetByGuid(string guid, MySqlConnection? connection = null);
         LsId Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingModel model);
         int UpdateAllSrt(MySqlConnection connection, MySqlTransaction trans, string videoGuid, string allSrt);
+        int UpdateTitle(MySqlConnection connection, MySqlTransaction trans, string videoGuid, string title);
     }
 }

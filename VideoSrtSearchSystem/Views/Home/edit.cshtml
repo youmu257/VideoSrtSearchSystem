@@ -1,0 +1,136 @@
+﻿@using Share.DTO.Response.Video
+@{
+    var Video = ViewData.ContainsKey("Video") ? ViewData["Video"] as GetOneVideoInfoResponse : new GetOneVideoInfoResponse();
+}
+
+<div class="container">
+    <h2>Edit Video</h2>
+    <div class="form-group">
+        <label asp-for="@Video.VideoGuid">ID</label>
+        <input id="videoGuid" value="@Video.VideoGuid" class="form-control" readonly />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="@Video.VideoTitle">Title</label>
+        <input type="text" id="videoTitle" class="form-control" value="@Video.VideoTitle">
+    </div>
+
+    <div class="form-group">
+        <label asp-for="@Video.VideoUrl">URL</label>
+        <input asp-for="@Video.VideoUrl" class="form-control" readonly />
+    </div>
+    @if (Video.TagList != null && Video.TagList.Count > 0)
+    {
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tag Name</th>
+                            <th>Tag Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tagTableBody">
+                        @foreach (var tag in Video.TagList)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="hidden" id="tagId" value="@tag.Id" />
+                                    <input type="text" id="tagName" class="form-control" value="@tag.TagName">
+                                </td>
+                                <td>
+                                    <select id="typeSelect" name="type" class="form-select">
+                                        <option value="">請選擇類型</option>
+                                        @foreach (var type in Video.TagTypeList)
+                                        {
+                                            <option value="@type.Id" selected="@(type.Id.Value == tag.TagType ? "selected" : null)">@type.TypeName</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <button class="btn btn-success" onclick="addRow()">新增</button>
+            </div>
+        </div>
+    }
+    <button class="btn btn-primary" onclick="save()">儲存</button>
+    <a href="/home" class="btn btn-secondary">Cancel</a>
+</div>
+<script type="text/javascript">
+    function addRow() {
+        // 獲取 tbody 元素
+        var tbody = document.getElementById("tagTableBody");
+
+        // 創建新的一行
+        var newRow = document.createElement("tr");
+
+        // 創建第一列 (Tag Name)
+        var tagNameCell = document.createElement("td");
+        var tagNameInput = document.createElement("input");
+        tagNameInput.type = "text";
+        tagNameInput.id = "tagName";
+        tagNameInput.className = "form-control";
+        tagNameCell.appendChild(tagNameInput);
+
+        // 創建第二列 (Tag Type)
+        var tagTypeCell = document.createElement("td");
+        var tagTypeSelect = document.createElement("select");
+        tagTypeSelect.id = "typeSelect";
+        tagTypeSelect.name = "type";
+        tagTypeSelect.className = "form-select";
+
+        // 添加選項
+        var defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "請選擇類型";
+        tagTypeSelect.appendChild(defaultOption);
+        @foreach (var type in Video.TagTypeList)
+        {
+            <text>
+                var option = document.createElement("option");
+                option.value = "@type.Id";
+                option.textContent = @Html.Raw(Json.Serialize(type.TypeName)); // 確保中文正確顯示
+                tagTypeSelect.appendChild(option);
+            </text>
+        }
+
+        tagTypeCell.appendChild(tagTypeSelect);
+
+        // 將兩列添加到新行
+        newRow.appendChild(tagNameCell);
+        newRow.appendChild(tagTypeCell);
+
+        // 將新行添加到 tbody
+        tbody.appendChild(newRow);
+    }
+    function save() {
+        var guid = document.getElementById("videoGuid").value;
+        var title = document.getElementById("videoTitle").value;
+        var tags = [];
+        var rows = document.querySelectorAll("tbody tr");
+        rows.forEach(function (row) {
+            var tagIdElement = row.querySelector("input[id='tagId']");
+            var tagId = tagIdElement == null ? 0 : tagIdElement.value;
+            var tagName = row.querySelector("input[id='tagName']").value;
+            var tagType = row.querySelector("select[id='typeSelect']").value;
+
+            tags.push({
+                id: parseInt(tagId),
+                name: tagName,
+                type: parseInt(tagType),
+            });
+        });
+
+        // var encodedQuery = encodeURIComponent(query);
+
+        // 構建URL參數
+        var params = 'guid=' + encodeURIComponent(guid) + '&title=' + encodeURIComponent(title);
+        if (tags.length > 0)
+        {
+            params += '&tagJson=' + encodeURIComponent(JSON.stringify(tags));
+        }
+        window.location.href = 'editVideo?' + params;
+    }
+</script>

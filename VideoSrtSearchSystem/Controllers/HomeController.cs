@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Share.DTO.Request;
 using Share.DTO.Request.Srt;
 using Share.DTO.Request.Tag;
+using Share.DTO.Request.Video;
+using Share.DTO.Response.Video;
 using Share.Models;
 using Share.Models.LiveStraming;
 using Share.Services.Srt;
@@ -41,6 +43,39 @@ namespace VideoSrtSearchSystem.Controllers
             return View("home");
         }
 
+        [HttpGet]
+        [Route("edit")]
+        public IActionResult Edit(string guid)
+        {
+            if (string.IsNullOrEmpty(guid))
+            {
+                return View();
+            }
+            var videoInfo = _liveStreamingService.GetOneVideoInfo(guid);
+            ViewData["Video"] = videoInfo;
+            return View("edit");
+        }
+
+        [HttpGet]
+        [Route("editVideo")]
+        public IActionResult EditVideo(string guid, string title, string tagJson)
+        {
+            if (string.IsNullOrEmpty(guid))
+            {
+                return View();
+            }
+            var j = System.Text.Json.JsonSerializer.Deserialize<List<TagEditDTO>>(tagJson);
+            var request = new EditVideoRequest
+            {
+                VideoGuid = guid,
+                VideoTitle = title,
+                TagList = System.Text.Json.JsonSerializer.Deserialize<List<TagEditDTO>>(tagJson) ?? new List<TagEditDTO>(),
+            };
+            _liveStreamingService.UpdateVideoInfo(request);
+            var videoInfo = _liveStreamingService.GetOneVideoInfo(guid);
+            ViewData["Video"] = videoInfo;
+            return Edit(guid);
+        }
 
         [HttpGet]
         [Route("srtSearch")]

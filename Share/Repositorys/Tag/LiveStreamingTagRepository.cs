@@ -60,6 +60,25 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public List<LiveStreamingTagModel> GetByKeywordList(List<string> keywordList, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingTagModel.lst_id),
+                };
+                var query = new Query(LiveStreamingTagModel.TableName)
+                    .WhereIn(nameof(LiveStreamingTagModel.lst_name), keywordList)
+                    .Select(cols);
+                return _mySqlTool.SelectMany<LiveStreamingTagModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public int GetCount(LsttType type, string keyword, MySqlConnection? connection = null)
         {
             try
@@ -79,6 +98,29 @@ namespace Share.Repositorys.Tag
                 }
                 query = query.AsCount(cols);
                 return _mySqlTool.Count(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public List<LiveStreamingTagModel> GetByVideoGuid(string guid, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingTagModel.lst_id),
+                    nameof(LiveStreamingTagModel.lst_name),
+                    nameof(LiveStreamingTagModel.lst_type),
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .Join(LiveStreamingTagMappingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingTagMappingModel.lstm_ls_id))
+                    .Join(LiveStreamingTagModel.TableName, nameof(LiveStreamingTagModel.lst_id), nameof(LiveStreamingTagMappingModel.lstm_lst_id))
+                    .Where(nameof(LiveStreamingModel.ls_guid), guid)
+                    .Select(cols);
+                return _mySqlTool.SelectMany<LiveStreamingTagModel>(connection, query);
             }
             catch (Exception)
             {

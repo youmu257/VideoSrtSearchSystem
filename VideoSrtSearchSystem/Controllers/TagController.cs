@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Share.Const;
 using Share.DTO.Request.Tag;
-using Share.Exceptions;
 using Share.Services.Tag;
 using Share.Tool.Language;
 
@@ -32,7 +31,7 @@ namespace VideoSrtSearchSystem.Controllers
                     return ParameterFormatError("Type");
                 }
 
-                    var result = _tagService.SearchTags(request);
+                var result = _tagService.SearchTags(request);
                 return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), result);
             }
             catch (Exception ex)

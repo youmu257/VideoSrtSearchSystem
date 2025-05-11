@@ -168,5 +168,24 @@ namespace Share.Repositorys.LiveStraming
                 throw;
             }
         }
+
+        public int UpdateTitle(MySqlConnection connection, MySqlTransaction trans, string videoGuid, string title)
+        {
+            try
+            {
+                var update = new Dictionary<string, object>()
+                {
+                    { nameof(LiveStreamingModel.ls_title), title },
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .Where(nameof(LiveStreamingModel.ls_guid), videoGuid)
+                    .AsUpdate(update);
+                return _mySqlTool.Update(connection, trans, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@
     /// 0XXX: 成功系列
     /// 2XXX: 通用系列
     /// 3XXX: 標籤系列
+    /// 4XXX: 影片系列
     /// 9XXX: 通用錯誤系列
     /// </summary>
     public class ResponseCode
@@ -37,6 +38,11 @@
         /// 標籤已存在
         /// </summary>
         public const string TAG_IS_EXIST = "3002";
+
+        /// <summary>
+        /// 影片不存在
+        /// </summary>
+        public const string VIDEO_NOT_EXIST = "4001";
 
         /// <summary>
         /// 通用失敗回傳

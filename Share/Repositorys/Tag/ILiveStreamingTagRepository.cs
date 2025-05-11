@@ -7,7 +7,9 @@ namespace Share.Repositorys.Tag
     {
         List<LiveStreamingTagModel> GetByTypeAndKeyword(LsttType type, string keyword, int page, int pageSize, MySqlConnection connection);
         LiveStreamingTagModel GetByTypeAndKeyword(LsttType type, string keyword, MySqlConnection connection);
+        List<LiveStreamingTagModel> GetByKeywordList(List<string> keywordList, MySqlConnection connection);
         int GetCount(LsttType type, string keyword, MySqlConnection? connection = null);
+        List<LiveStreamingTagModel> GetByVideoGuid(string guid, MySqlConnection connection);
         uint Insert(MySqlConnection connection, MySqlTransaction trans, LiveStreamingTagModel model);
     }
 }

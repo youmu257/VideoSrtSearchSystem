@@ -8,7 +8,7 @@ namespace Share.Models.LiveStraming
     public partial struct LsttType;
 
     /// <summary>
-    /// 影片標籤
+    /// 影片標籤類型
     /// </summary>
     public class LiveStreamingTagTypeModel : BaseModel
     {

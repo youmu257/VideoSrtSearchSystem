@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MySqlX.XDevAPI.Common;
 using Share.Const;
 using Share.Exceptions;
 using Share.Tool.Language;

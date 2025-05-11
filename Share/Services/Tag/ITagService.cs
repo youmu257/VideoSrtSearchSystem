@@ -7,6 +7,6 @@ namespace Share.Services.Tag
     {
         GetAllTagResponse SearchTags(SearchTagRequest request);
         List<TagTypeResponse> GetTagType();
-        void InsertTag(AddTagRequest request);
+        uint InsertTag(AddTagRequest request);
     }
 }

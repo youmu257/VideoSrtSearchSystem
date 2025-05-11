@@ -76,7 +76,7 @@ namespace Share.Services.Tag
             }
         }
 
-        public void InsertTag(AddTagRequest request)
+        public uint InsertTag(AddTagRequest request)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace Share.Services.Tag
                 var tagModel = _liveStreamingTagRepository.GetByTypeAndKeyword(request.TagType, request.TagName, connection);
                 if (tagModel.lst_id.Value > 0)
                 {
-                    throw new MyException(ResponseCode.TAG_IS_EXIST);
+                    return tagModel.lst_id.Value;
                 }
                 // 新增標籤
                 var insertModel = new LiveStreamingTagModel
@@ -99,9 +99,11 @@ namespace Share.Services.Tag
                     lst_name = request.TagName,
                     lst_type = request.TagType,
                 };
+                uint insertId = 0;
                 var trans = connection.BeginTransaction();
-                _liveStreamingTagRepository.Insert(connection, trans, insertModel);
+                insertId = _liveStreamingTagRepository.Insert(connection, trans, insertModel);
                 trans.Commit();
+                return insertId;
             }
             catch (MyException ex)
             {
