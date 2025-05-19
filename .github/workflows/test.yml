@@ -26,5 +26,6 @@ jobs:
       # 執行一組的指令
       - name: Run a multi-line script
         run: |
-          git checkout develop
+          docker build
           ls
+          docker images -a
