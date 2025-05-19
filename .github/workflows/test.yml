@@ -21,7 +21,7 @@ jobs:
 
       # 在 Runner 上使用 shell 顯示出 Hello world
       - name: Run a one-line script
-        run: ls
+        run: ls -la
 
       # 執行一組的指令
       - name: Run a multi-line script
