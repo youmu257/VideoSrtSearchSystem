@@ -26,5 +26,5 @@ jobs:
       # 執行一組的指令
       - name: Run a multi-line script
         run: |
-          date
-          echo leo
+          git checkout develop
+          ls
