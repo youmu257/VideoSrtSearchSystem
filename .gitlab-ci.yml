@@ -1,0 +1,20 @@
+stages:
+  - build
+  - deploy
+  - test
+
+dev-build:
+  stage: build
+  runs-on: oracle-free
+  only:
+    - test-cicd
+  script:
+    - echo "dev build"
+
+dev-deploy:
+  stage: deploy
+  runs-on: oracle-free
+  only:
+    - test-cicd
+  script:
+    - echo "dev deploy"
