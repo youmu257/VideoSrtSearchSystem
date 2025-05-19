@@ -13,7 +13,7 @@ jobs:
   # 這個 workflow 只有一個 job，名稱為 "build"
   build:
     # 這個 job 會執行在作業系統為 ubuntu 的 runner
-    runs-on: chilla76cheese
+    runs-on: oracle-free
     # 作為 Job 的一部分，Steps 會循序執行一連串的動作
     steps:
       # 在 $GITHUB_WORKSPACE 下簽出您的存儲庫，以便您的工作可以訪問它
