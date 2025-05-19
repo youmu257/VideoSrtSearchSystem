@@ -5,7 +5,7 @@ stages:
 
 dev-build:
   stage: build
-  runs-on: oracle-free
+  runs-on: chilla76cheese
   only:
     - test-cicd
   script:
@@ -13,7 +13,7 @@ dev-build:
 
 dev-deploy:
   stage: deploy
-  runs-on: oracle-free
+  runs-on: chilla76cheese
   only:
     - test-cicd
   script:
