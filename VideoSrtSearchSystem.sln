@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoSrtSearchSystem", "Vid
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Share", "Share\Share.csproj", "{B22247CE-158A-4397-ABA8-4D06DF27FE5D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbMigrations", "DbMigrations\DbMigrations.csproj", "{5F50A7DC-6436-F612-4B41-D3B6F5C1A8FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B22247CE-158A-4397-ABA8-4D06DF27FE5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B22247CE-158A-4397-ABA8-4D06DF27FE5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B22247CE-158A-4397-ABA8-4D06DF27FE5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F50A7DC-6436-F612-4B41-D3B6F5C1A8FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F50A7DC-6436-F612-4B41-D3B6F5C1A8FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F50A7DC-6436-F612-4B41-D3B6F5C1A8FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F50A7DC-6436-F612-4B41-D3B6F5C1A8FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
