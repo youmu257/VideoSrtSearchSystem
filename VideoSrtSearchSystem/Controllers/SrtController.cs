@@ -33,6 +33,14 @@ namespace VideoSrtSearchSystem.Controllers
                 {
                     return ParameterIsRequired("VideoUrl");
                 }
+                if (string.IsNullOrEmpty(request.LiveTime))
+                {
+                    return ParameterIsRequired("LiveTime");
+                }
+                if (request.TagList.Count == 0)
+                {
+                    return ParameterIsRequired("Tags");
+                }
 
                 var responseCode = _srtService.ImportSrt(request);
                 if (responseCode != ResponseCode.SUCCESS)

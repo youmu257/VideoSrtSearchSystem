@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Share.Models.LiveStraming;
 using System.Text.Json.Serialization;
 
 namespace Share.DTO.Request.Srt
@@ -29,5 +30,26 @@ namespace Share.DTO.Request.Srt
         /// </summary>
         [JsonPropertyName("liveTime")]
         public string LiveTime { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 直播標籤
+        /// </summary>
+        [JsonPropertyName("tags")]
+        public List<TagDTO> TagList { get; set; } = new List<TagDTO>();
+    }
+
+    public class TagDTO
+    {
+        /// <summary>
+        /// 標籤名字
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string TagName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 標籤類型
+        /// </summary>
+        [JsonPropertyName("type")]
+        public LsttType TagType { get; set; } = LsttType.From(0);
     }
 }

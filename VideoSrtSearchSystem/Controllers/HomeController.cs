@@ -64,7 +64,6 @@ namespace VideoSrtSearchSystem.Controllers
             {
                 return View();
             }
-            var j = System.Text.Json.JsonSerializer.Deserialize<List<TagEditDTO>>(tagJson);
             var request = new EditVideoRequest
             {
                 VideoGuid = guid,

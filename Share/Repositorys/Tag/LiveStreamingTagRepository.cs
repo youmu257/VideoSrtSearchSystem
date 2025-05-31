@@ -40,6 +40,25 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public LiveStreamingTagModel GetByKeyword(string keyword, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingTagModel.lst_id),
+                };
+                var query = new Query(LiveStreamingTagModel.TableName)
+                    .Where(nameof(LiveStreamingTagModel.lst_name), keyword)
+                    .Select(cols);
+                return _mySqlTool.SelectOne<LiveStreamingTagModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public LiveStreamingTagModel GetByTypeAndKeyword(LsttType type, string keyword, MySqlConnection connection)
         {
             try

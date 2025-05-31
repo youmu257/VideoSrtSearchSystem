@@ -25,6 +25,21 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public int Delete(MySqlConnection connection, MySqlTransaction trans, LsId videoId)
+        {
+            try
+            {
+                var query = new Query(LiveStreamingTagMappingModel.TableName)
+                    .Where(nameof(LiveStreamingTagMappingModel.lstm_ls_id), "=", videoId.Value)
+                    .AsDelete();
+                return _mySqlTool.Delete(connection, trans, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public uint Insert(MySqlConnection connection, MySqlTransaction trans, LsId videoId, List<LstId> tagIdList)
         {
             try

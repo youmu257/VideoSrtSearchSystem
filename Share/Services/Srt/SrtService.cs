@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Share.Config.Appsettings;
 using Share.Const;
 using Share.DTO.Request.Srt;
+using Share.DTO.Request.Tag;
 using Share.DTO.Response.Srt;
 using Share.Models.LiveStraming;
 using Share.Repositorys.LiveStraming;
 using Share.Repositorys.Srt;
+using Share.Repositorys.Tag;
+using Share.Services.Tag;
 using Share.Tool;
 using Share.Tool.MySQL;
 using SubtitlesParser.Classes.Parsers;
@@ -16,16 +18,16 @@ using System.Text;
 namespace Share.Services.Srt
 {
     public class SrtService(
+        ITagService _tagService,
         ILiveStreamingRepository _liveStreamingRepository,
         ILiveStreamingSrtRepository _liveStreamingSrtRepository,
+        ILiveStreamingTagMappingRepository _liveStreamingTagMappingRepository,
         IMySQLConnectionProvider _mySQLConnectionProvider,
         ILogger<SrtService> _logger,
         ICommonTool _commonTool,
-        IOptions<SrtConfig> _srtConfig,
-        IWebHostEnvironment appEnvironment
+        IOptions<SrtConfig> _srtConfig
     ) : ISrtService
     {
-        private readonly string outputDirectory = Path.Combine(appEnvironment.WebRootPath, "output");
         private readonly int _searchPageSize = 20;
         private readonly string _srtDefaultPath = _srtConfig.Value.SrtDefaultPath;
         private readonly string _srtTimeFormat = @"hh\:mm\:ss\,fff";
@@ -44,6 +46,18 @@ namespace Share.Services.Srt
                 {
                     return ResponseCode.FILE_NOT_FOUND;
                 }
+                #region 檢查和新增標籤
+                var tagIdList = new List<LstId>();
+                foreach (var tagData in request.TagList)
+                {
+                    var tagId = _tagService.InsertTag(new AddTagRequest
+                    {
+                        TagType = tagData.TagType,
+                        TagName = tagData.TagName,
+                    });
+                    tagIdList.Add(LstId.From(tagId));
+                }
+                #endregion
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
                 // 只留影片ID
                 request.VideoUrl = request.VideoUrl.Replace("https://www.youtube.com/watch?v=", "");
@@ -102,9 +116,14 @@ namespace Share.Services.Srt
                         _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveStramingModel.ls_id);
                         // 更新全部字幕
                         _liveStreamingRepository.UpdateAllSrt(connection, trans, videoGuid, allSrt);
+                        // 刪除原本的影片標籤
+                        _liveStreamingTagMappingRepository.Delete(connection, trans, liveStramingModel.ls_id);
+
                     }
                     // 寫入字幕資訊
                     _liveStreamingSrtRepository.Insert(connection, trans, insertSrtList);
+                    // 寫入影片標籤
+                    _liveStreamingTagMappingRepository.Insert(connection, trans, liveStramingModel.ls_id, tagIdList);
                     trans.Commit();
                 }
                 catch (Exception ex)

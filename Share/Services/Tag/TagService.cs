@@ -88,7 +88,7 @@ namespace Share.Services.Tag
                     throw new MyException(ResponseCode.TAG_TYPE_NOT_EXIST);
                 }
                 // 檢查標籤是否已存在
-                var tagModel = _liveStreamingTagRepository.GetByTypeAndKeyword(request.TagType, request.TagName, connection);
+                var tagModel = _liveStreamingTagRepository.GetByKeyword(request.TagName, connection);
                 if (tagModel.lst_id.Value > 0)
                 {
                     return tagModel.lst_id.Value;
