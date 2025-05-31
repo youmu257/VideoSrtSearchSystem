@@ -38,69 +38,27 @@ namespace Share.Services.Srt
         {
             try
             {
-                if (string.IsNullOrEmpty(request.SrtPath))
-                {
-                    request.SrtPath = Path.Combine(_srtDefaultPath, $"{request.VideoTitle}.srt");
-                }
-                if (!File.Exists(request.SrtPath))
-                {
-                    return ResponseCode.FILE_NOT_FOUND;
-                }
-                #region 檢查和新增標籤
-                var tagIdList = new List<LstId>();
-                foreach (var tagData in request.TagList)
-                {
-                    var tagId = _tagService.InsertTag(new AddTagRequest
-                    {
-                        TagType = tagData.TagType,
-                        TagName = tagData.TagName,
-                    });
-                    tagIdList.Add(LstId.From(tagId));
-                }
-                #endregion
+                SetDefaultSrtPathIfEmpty(request);
+
+                var tagIdList = InsertTagsAndGetIds(request.TagList);
+                request.VideoUrl = ExtractVideoId(request.VideoUrl);
+
                 using var connection = _mySQLConnectionProvider.GetNormalCotext();
-                // 只留影片ID
-                request.VideoUrl = request.VideoUrl.Replace("https://www.youtube.com/watch?v=", "");
-                // 檢查影片是否已存在
-                var liveStramingModel = _liveStreamingRepository.GetByUrl(request.VideoUrl, connection);
-                bool noVideo = string.IsNullOrEmpty(liveStramingModel.ls_guid);
-                // 影片 Guid
-                var videoGuid = noVideo ?
-                    Guid.NewGuid().ToString() :
-                    liveStramingModel.ls_guid;
-                #region 整理寫入的資料
-                var insertSrtList = new List<LiveStreamingSrtModel>();
-                var parser = new SrtParser();
-                using (var fileStream = File.OpenRead(request.SrtPath))
-                {
-                    var items = parser.ParseStream(fileStream, Encoding.UTF8);
-                    uint index = 1;
-                    foreach (var item in items)
-                    {
-                        var srtText = string.Join(" ", item.PlaintextLines);
-                        insertSrtList.Add(new LiveStreamingSrtModel
-                        {
-                            lss_ls_id = liveStramingModel.ls_id,
-                            lss_num = index++,
-                            lss_start = TimeSpan.FromMilliseconds(item.StartTime).ToString(@"hh\:mm\:ss\,fff"),
-                            lss_end = TimeSpan.FromMilliseconds(item.EndTime).ToString(@"hh\:mm\:ss\,fff"),
-                            lss_text = srtText,
-                        });
-                    }
-                }
-                if (insertSrtList.Count() == 0)
-                {
-                    return ResponseCode.SUCCESS;
-                }
-                var allSrt = string.Join("", insertSrtList.Select(item => item.lss_text).Distinct());
-                #endregion
-                var trans = connection.BeginTransaction();
+                var liveModel = _liveStreamingRepository.GetByUrl(request.VideoUrl, connection);
+                bool isNewVideo = string.IsNullOrEmpty(liveModel.ls_guid);
+                var videoGuid = isNewVideo ? Guid.NewGuid().ToString() : liveModel.ls_guid;
+
+                var insertSrtList = ParseSrtFile(request.SrtPath, liveModel.ls_id);
+
+                var allSrt = isNewVideo ? string.Join("", insertSrtList.Select(item => item.lss_text).Distinct()) : string.Empty;
+
+                using var trans = connection.BeginTransaction();
                 try
                 {
-                    if (noVideo)
+                    if (isNewVideo)
                     {
-                        // 寫入影片資訊
-                        liveStramingModel.ls_id = _liveStreamingRepository.Insert(connection, trans, new LiveStreamingModel
+                        // 新增影片資訊
+                        liveModel.ls_id = _liveStreamingRepository.Insert(connection, trans, new LiveStreamingModel
                         {
                             ls_guid = videoGuid,
                             ls_title = request.VideoTitle,
@@ -108,22 +66,21 @@ namespace Share.Services.Srt
                             ls_livetime = DateTime.Parse(request.LiveTime),
                             ls_all_srt = allSrt,
                         });
-                        insertSrtList.ForEach(item => item.lss_ls_id = liveStramingModel.ls_id);
+                        insertSrtList.ForEach(item => item.lss_ls_id = liveModel.ls_id);
                     }
                     else
                     {
-                        // 已有影片資料，把原有字幕清除
-                        _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveStramingModel.ls_id);
-                        // 更新全部字幕
+                        // 原本有影片資訊把原有資料的清空
+                        _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveModel.ls_id);
                         _liveStreamingRepository.UpdateAllSrt(connection, trans, videoGuid, allSrt);
-                        // 刪除原本的影片標籤
-                        _liveStreamingTagMappingRepository.Delete(connection, trans, liveStramingModel.ls_id);
-
+                        _liveStreamingTagMappingRepository.Delete(connection, trans, liveModel.ls_id);
                     }
-                    // 寫入字幕資訊
-                    _liveStreamingSrtRepository.Insert(connection, trans, insertSrtList);
-                    // 寫入影片標籤
-                    _liveStreamingTagMappingRepository.Insert(connection, trans, liveStramingModel.ls_id, tagIdList);
+                    if (insertSrtList.Count > 0)
+                    {
+                        _liveStreamingSrtRepository.Insert(connection, trans, insertSrtList);
+                    }
+                    _liveStreamingTagMappingRepository.Insert(connection, trans, liveModel.ls_id, tagIdList);
+
                     trans.Commit();
                 }
                 catch (Exception ex)
@@ -300,6 +257,61 @@ namespace Share.Services.Srt
                 _logger.LogError(ex.ToString());
                 throw;
             }
+        }
+
+        private void SetDefaultSrtPathIfEmpty(ImportSrtRequest request)
+        {
+            if (string.IsNullOrEmpty(request.SrtPath))
+            {
+                request.SrtPath = Path.Combine(_srtDefaultPath, $"{request.VideoTitle}.srt");
+            }
+        }
+
+        private List<LstId> InsertTagsAndGetIds(List<TagDTO> tagList)
+        {
+            var tagIdList = new List<LstId>();
+            foreach (var tag in tagList)
+            {
+                var tagId = _tagService.InsertTag(new AddTagRequest
+                {
+                    TagType = tag.TagType,
+                    TagName = tag.TagName,
+                });
+                tagIdList.Add(LstId.From(tagId));
+            }
+            return tagIdList;
+        }
+
+        private string ExtractVideoId(string url)
+        {
+            return url.Replace("https://www.youtube.com/watch?v=", "");
+        }
+
+        private List<LiveStreamingSrtModel> ParseSrtFile(string srtPath, LsId videoId)
+        {
+            if (!File.Exists(srtPath))
+            {
+                return new List<LiveStreamingSrtModel>();
+            }
+
+            var parser = new SrtParser();
+            var insertSrtList = new List<LiveStreamingSrtModel>();
+            using var fileStream = File.OpenRead(srtPath);
+            var items = parser.ParseStream(fileStream, Encoding.UTF8);
+            uint index = 1;
+            foreach (var item in items)
+            {
+                var srtText = string.Join(" ", item.PlaintextLines);
+                insertSrtList.Add(new LiveStreamingSrtModel
+                {
+                    lss_ls_id = videoId,
+                    lss_num = index++,
+                    lss_start = TimeSpan.FromMilliseconds(item.StartTime).ToString(_srtTimeFormat),
+                    lss_end = TimeSpan.FromMilliseconds(item.EndTime).ToString(_srtTimeFormat),
+                    lss_text = srtText,
+                });
+            }
+            return insertSrtList;
         }
     }
 }
