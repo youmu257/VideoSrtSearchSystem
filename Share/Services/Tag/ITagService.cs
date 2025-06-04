@@ -1,5 +1,6 @@
 ﻿using Share.DTO.Request.Tag;
 using Share.DTO.Response.Tag;
+using Share.Models.LiveStraming;
 
 namespace Share.Services.Tag
 {
@@ -7,6 +8,8 @@ namespace Share.Services.Tag
     {
         GetAllTagResponse SearchTags(SearchTagRequest request);
         List<TagTypeResponse> GetTagType();
+        LiveStreamingTagModel GetTagData(LstId tagId);
         uint InsertTag(AddTagRequest request);
+        void UpdateTag(EditTagRequest request);
     }
 }

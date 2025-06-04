@@ -1,0 +1,40 @@
+﻿@using Share.DTO.Response.Tag
+@using Share.Models.LiveStraming
+@{
+    var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>;
+    var tagData = ViewData["TagData"] as LiveStreamingTagModel;
+}
+
+<div class="container">
+    <h2>Add Tag</h2>
+    <input type="hidden" id="tagId" name="tagId" value="@tagData.lst_id.Value" />
+    <!-- 下拉式選單 -->
+    <div class="col-md-4 mb-3">
+        <label for="typeSelect" class="form-label">標籤類型</label>
+        <select id="typeSelect" name="type" class="form-select">
+            <option value="">請選擇類型</option>
+            @foreach (var type in tagTypeList)
+            {
+                <option value="@type.Id" selected="@(type.Id.Value == tagData.lst_type.Value ? "selected" : null)">@type.TypeName</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>標籤名稱</label>
+        <input type="text" id="tagName" class="form-control" value="@tagData.lst_name">
+    </div>
+
+    <button onclick="redirectToSearchResults()" class="btn btn-primary">儲存</button>
+    <a href="/editTag" class="btn btn-secondary">Cancel</a>
+</div>
+<script type="text/javascript">
+    function redirectToSearchResults(pageNumber) {
+        var tagName = document.getElementById("tagName").value;
+        var tagType = document.getElementById("typeSelect").value;
+        var tagId = document.getElementById("tagId").value;
+
+        // 構建URL參數
+        window.location.href = 'updateTag?id=' + tagId + '&type=' + encodeURIComponent(tagType) + "&name=" + encodeURIComponent(tagName);
+    }
+</script>

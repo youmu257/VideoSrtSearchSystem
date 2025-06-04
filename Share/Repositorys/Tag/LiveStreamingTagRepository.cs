@@ -40,6 +40,26 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public LiveStreamingTagModel GetById(LstId tagId, MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(LiveStreamingTagModel.lst_type),
+                    nameof(LiveStreamingTagModel.lst_name),
+                };
+                var query = new Query(LiveStreamingTagModel.TableName)
+                    .Where(nameof(LiveStreamingTagModel.lst_id), tagId.Value)
+                    .Select(cols);
+                return _mySqlTool.SelectOne<LiveStreamingTagModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public LiveStreamingTagModel GetByKeyword(string keyword, MySqlConnection connection)
         {
             try
@@ -164,6 +184,26 @@ namespace Share.Repositorys.Tag
                 var query = new Query(LiveStreamingTagModel.TableName)
                     .AsInsert(insertCols, insertData);
                 return _mySqlTool.Insert(connection, trans, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public int Update(MySqlConnection connection, MySqlTransaction trans, LiveStreamingTagModel model)
+        {
+            try
+            {
+                var update = new Dictionary<string, object>()
+                {
+                    { nameof(LiveStreamingTagModel.lst_name), model.lst_name },
+                    { nameof(LiveStreamingTagModel.lst_type), model.lst_type.Value },
+                };
+                var query = new Query(LiveStreamingTagModel.TableName)
+                    .Where(nameof(LiveStreamingTagModel.lst_id), model.lst_id.Value)
+                    .AsUpdate(update);
+                return _mySqlTool.Update(connection, trans, query);
             }
             catch (Exception)
             {

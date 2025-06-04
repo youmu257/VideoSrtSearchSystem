@@ -130,6 +130,30 @@ namespace VideoSrtSearchSystem.Controllers
         }
 
         [HttpGet]
+        [Route("editTag")]
+        public IActionResult EditTag(LstId id)
+        {
+            var tagData = _tagService.GetTagData(id);
+            var tagTypeList = _tagService.GetTagType();
+            ViewData["TagTypeList"] = tagTypeList;
+            ViewData["TagData"] = tagData;
+            return View("editTag");
+        }
+
+        [HttpGet]
+        [Route("updateTag")]
+        public IActionResult EditTag(LstId id, uint type, string name)
+        {
+            _tagService.UpdateTag(new EditTagRequest
+            {
+                TagId = id,
+                TagType = LsttType.From(type),
+                TagName = name,
+            });
+            return EditTag(id);
+        }
+
+        [HttpGet]
         [Route("insertTag")]
         public IActionResult InsertTag(uint type, string name)
         {

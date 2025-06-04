@@ -63,5 +63,34 @@ namespace VideoSrtSearchSystem.Controllers
                 return ExceptionResponse(ex);
             }
         }
+
+        [HttpPost]
+        [Route("edit")]
+        public IActionResult EditTag(EditTagRequest request)
+        {
+            try
+            {
+                if (request.TagId.Value <= 0)
+                {
+                    return ParameterIsRequired("TagId");
+                }
+                if (string.IsNullOrEmpty(request.TagName))
+                {
+                    return ParameterIsRequired("TagName");
+                }
+                if (request.TagType.Value <= 0)
+                {
+                    return ParameterIsRequired("TagType");
+                }
+
+                _tagService.UpdateTag(request);
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"));
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResponse(ex);
+            }
+        }
+
     }
 }

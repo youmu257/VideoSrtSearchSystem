@@ -76,6 +76,25 @@ namespace Share.Services.Tag
             }
         }
 
+        public LiveStreamingTagModel GetTagData(LstId tagId)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 取得標籤料
+                var tagData = _liveStreamingTagRepository.GetById(tagId, connection);
+                tagData.lst_id = tagId;
+                return tagData;
+                ;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+
         public uint InsertTag(AddTagRequest request)
         {
             try
@@ -104,6 +123,45 @@ namespace Share.Services.Tag
                 insertId = _liveStreamingTagRepository.Insert(connection, trans, insertModel);
                 trans.Commit();
                 return insertId;
+            }
+            catch (MyException ex)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        public void UpdateTag(EditTagRequest request)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 檢查標籤類型
+                var tagTypeModel = _liveStreamingTagTypeRepository.GetByType(request.TagType, connection);
+                if (tagTypeModel.lstt_type.Value == 0)
+                {
+                    throw new MyException(ResponseCode.TAG_TYPE_NOT_EXIST);
+                }
+                // 檢查標籤是否已存在
+                var tagModel = _liveStreamingTagRepository.GetByKeyword(request.TagName, connection);
+                if (tagModel.lst_id.Value > 0)
+                {
+                    throw new MyException(ResponseCode.TAG_IS_EXIST);
+                }
+                // 編輯標籤
+                var updateModel = new LiveStreamingTagModel
+                {
+                    lst_id = request.TagId,
+                    lst_name = request.TagName,
+                    lst_type = request.TagType,
+                };
+                var trans = connection.BeginTransaction();
+                _liveStreamingTagRepository.Update(connection, trans, updateModel);
+                trans.Commit();
             }
             catch (MyException ex)
             {
