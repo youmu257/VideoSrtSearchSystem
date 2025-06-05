@@ -64,11 +64,16 @@ namespace VideoSrtSearchSystem.Controllers
         {
             try
             {
+                List<string> errorUrlIdList = new List<string>();
                 foreach (var request in requests)
                 {
-                    _srtService.ImportSrt(request);
+                    var result = _srtService.ImportSrt(request);
+                    if (result != ResponseCode.SUCCESS)
+                    {
+                        errorUrlIdList.Add(result);
+                    }
                 }
-                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"));
+                return Ok(ResponseCode.SUCCESS, LangTool.GetTranslation("common_success"), errorUrlIdList);
             }
             catch (Exception ex)
             {

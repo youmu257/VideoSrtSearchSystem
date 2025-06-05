@@ -72,7 +72,7 @@ namespace Share.Services.Srt
                     {
                         // 原本有影片資訊把原有資料的清空
                         _liveStreamingSrtRepository.DeleteByVideoId(connection, trans, liveModel.ls_id);
-                        _liveStreamingRepository.UpdateAllSrt(connection, trans, videoGuid, allSrt);
+                        _liveStreamingRepository.UpdateAllSrt(connection, trans, videoGuid, request.VideoUrl, request.VideoTitle, allSrt);
                         _liveStreamingTagMappingRepository.Delete(connection, trans, liveModel.ls_id);
                     }
                     if (insertSrtList.Count > 0)
@@ -87,6 +87,7 @@ namespace Share.Services.Srt
                 {
                     _logger.LogError(ex.ToString());
                     trans.Rollback();
+                    return request.VideoUrl;
                 }
                 return ResponseCode.SUCCESS;
             }

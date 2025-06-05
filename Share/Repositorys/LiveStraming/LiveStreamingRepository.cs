@@ -150,13 +150,15 @@ namespace Share.Repositorys.LiveStraming
             }
         }
 
-        public int UpdateAllSrt(MySqlConnection connection, MySqlTransaction trans, string videoGuid, string allSrt)
+        public int UpdateAllSrt(MySqlConnection connection, MySqlTransaction trans, string videoGuid, string url, string title, string allSrt)
         {
             try
             {
                 var update = new Dictionary<string, object>()
                 {
                     { nameof(LiveStreamingModel.ls_all_srt), allSrt },
+                    { nameof(LiveStreamingModel.ls_url), url },
+                    { nameof(LiveStreamingModel.ls_title), title },
                 };
                 var query = new Query(LiveStreamingModel.TableName)
                     .Where(nameof(LiveStreamingModel.ls_guid), videoGuid)

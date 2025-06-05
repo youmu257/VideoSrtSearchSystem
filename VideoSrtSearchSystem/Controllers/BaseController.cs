@@ -84,6 +84,11 @@ namespace VideoSrtSearchSystem.Controllers
             return Ok(new { code, message, result });
         }
 
+        protected IActionResult OkText(string result)
+        {
+            return Content(result, "text/plain; charset=utf-8");
+        }
+
         protected ObjectResult ExceptionResponse(Exception ex)
         {
             var stackTrace = new StackTrace();

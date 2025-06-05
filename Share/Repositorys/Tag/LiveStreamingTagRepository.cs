@@ -40,6 +40,41 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public List<UrlAndTagsModel> GetByTypeMapping(MySqlConnection connection)
+        {
+            try
+            {
+                var cols = new string[]
+                {
+                    nameof(UrlAndTagsModel.ls_url),
+                    nameof(LiveStreamingModel.ls_id),
+                };
+                var query = new Query(LiveStreamingModel.TableName)
+                    .Join(
+                        LiveStreamingTagMappingModel.TableName,
+                        nameof(LiveStreamingModel.ls_id),
+                        nameof(LiveStreamingTagMappingModel.lstm_ls_id)
+                    )
+                    .Join(
+                        LiveStreamingTagModel.TableName,
+                        nameof(LiveStreamingTagMappingModel.lstm_lst_id),
+                        nameof(LiveStreamingTagModel.lst_id)
+                    )
+                    .Select(cols)
+                    .SelectRaw(
+                        @$"JSON_ARRAYAGG(JSON_OBJECT('tagName', {nameof(LiveStreamingTagModel.lst_name)}, 'tagType', {nameof(LiveStreamingTagModel.lst_type)})) AS {nameof(UrlAndTagsModel.tags)}"
+                    )
+                    .GroupBy(nameof(LiveStreamingModel.ls_url), nameof(LiveStreamingModel.ls_id))
+                    .OrderBy(nameof(LiveStreamingModel.ls_id));
+
+                return _mySqlTool.SelectMany<UrlAndTagsModel>(connection, query);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public LiveStreamingTagModel GetById(LstId tagId, MySqlConnection connection)
         {
             try

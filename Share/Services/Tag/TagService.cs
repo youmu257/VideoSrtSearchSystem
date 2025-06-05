@@ -8,6 +8,8 @@ using Share.Repositorys.Tag;
 using Share.Services.Video;
 using Share.Tool;
 using Share.Tool.MySQL;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace Share.Services.Tag
 {
@@ -20,6 +22,11 @@ namespace Share.Services.Tag
     ) : ITagService
     {
         private const int pageSize = 25;
+        private readonly static JsonSerializerOptions options = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // 關鍵設定
+            WriteIndented = false // 可選：是否要縮排格式化
+        };
 
         public GetAllTagResponse SearchTags(SearchTagRequest request)
         {
@@ -47,6 +54,36 @@ namespace Share.Services.Tag
                         TypeName = item.lstt_name,
                     }).ToList(),
                 };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        public string GetTagsMappingList()
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 取得標籤列表
+                var tagList = _liveStreamingTagRepository.GetByTypeMapping(connection);
+                // 把字串每筆換行間隔
+                return string.Join(
+                    "\n",
+                    tagList.Select(item =>
+                        // 把資料先串成 tab 分隔的字串，方便貼到 excel
+                        string.Concat(
+                            string.Concat("https://www.youtube.com/watch?v=", item.ls_url),
+                            "\t",
+                            JsonSerializer.Serialize(
+                                JsonSerializer.Deserialize<List<AddTagRequest>>(item.tags),
+                                options
+                            )
+                        )
+                    )
+                );
             }
             catch (Exception ex)
             {
