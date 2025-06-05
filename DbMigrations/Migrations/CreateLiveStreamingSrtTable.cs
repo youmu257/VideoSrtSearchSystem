@@ -14,7 +14,7 @@ namespace Share.Migrations
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_num)).AsInt32().NotNullable()
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_start)).AsString(32).NotNullable()
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_end)).AsString(32).NotNullable()
-                .WithColumn(nameof(LiveStreamingSrtModel.lss_text)).AsString(1024).NotNullable()
+                .WithColumn(nameof(LiveStreamingSrtModel.lss_text)).AsCustom("VARCHAR(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci").NotNullable()
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_createtime)).AsDateTime().NotNullable().WithDefault(SystemMethods.CurrentDateTime);
 
             // 建立索引以提升查詢效能

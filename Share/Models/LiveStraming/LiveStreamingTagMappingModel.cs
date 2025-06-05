@@ -17,12 +17,12 @@ namespace Share.Models.LiveStraming
         public LstmId lstm_id { get; set; } = LstmId.From(0);
 
         /// <summary>
-        /// 標籤類型
+        /// 影片 ID
         /// </summary>
         public LsId lstm_ls_id { get; set; } = LsId.From(0);
 
         /// <summary>
-        /// 標籤類型
+        /// 標籤 ID
         /// </summary>
         public LstId lstm_lst_id { get; set; } = LstId.From(0);
 

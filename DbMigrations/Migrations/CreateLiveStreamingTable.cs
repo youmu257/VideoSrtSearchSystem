@@ -11,7 +11,7 @@ namespace Share.Migrations
             Create.Table(LiveStreamingModel.TableName)
                 .WithColumn(nameof(LiveStreamingModel.ls_id)).AsInt32().PrimaryKey().Identity()
                 .WithColumn(nameof(LiveStreamingModel.ls_guid)).AsString(36).NotNullable().Unique()
-                .WithColumn(nameof(LiveStreamingModel.ls_title)).AsString(255).NotNullable()
+                .WithColumn(nameof(LiveStreamingModel.ls_title)).AsCustom("VARCHAR(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci").NotNullable()
                 .WithColumn(nameof(LiveStreamingModel.ls_url)).AsString(1024).NotNullable()
                 .WithColumn(nameof(LiveStreamingModel.ls_all_srt)).AsCustom("LONGTEXT").Nullable()
                 .WithColumn(nameof(LiveStreamingModel.ls_livetime)).AsDateTime().NotNullable()
