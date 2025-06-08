@@ -13,6 +13,12 @@ namespace Share.DTO.Request
         public string Keyword { get; set; } = string.Empty;
 
         /// <summary>
+        /// 標籤關鍵字查詢
+        /// </summary>
+        [JsonPropertyName("tagKeyword")]
+        public string TagKeyword { get; set; } = string.Empty;
+
+        /// <summary>
         /// 分頁
         /// </summary>
         [JsonPropertyName("page")]

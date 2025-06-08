@@ -31,6 +31,7 @@ namespace Share.Repositorys.Tag
                 query = query
                     .Offset(page * pageSize)
                     .Limit(pageSize)
+                    .OrderBy(nameof(LiveStreamingTagModel.lst_name))
                     .Select(cols);
                 return _mySqlTool.SelectMany<LiveStreamingTagModel>(connection, query);
             }
@@ -62,7 +63,7 @@ namespace Share.Repositorys.Tag
                     )
                     .Select(cols)
                     .SelectRaw(
-                        @$"JSON_ARRAYAGG(JSON_OBJECT('tagName', {nameof(LiveStreamingTagModel.lst_name)}, 'tagType', {nameof(LiveStreamingTagModel.lst_type)})) AS {nameof(UrlAndTagsModel.tags)}"
+                        @$"JSON_ARRAYAGG(JSON_OBJECT('name', {nameof(LiveStreamingTagModel.lst_name)}, 'type', {nameof(LiveStreamingTagModel.lst_type)})) AS {nameof(UrlAndTagsModel.tags)}"
                     )
                     .GroupBy(nameof(LiveStreamingModel.ls_url), nameof(LiveStreamingModel.ls_id))
                     .OrderBy(nameof(LiveStreamingModel.ls_id));

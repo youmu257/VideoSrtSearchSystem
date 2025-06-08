@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Share.Const;
+using Share.DTO.Request.Srt;
 using Share.DTO.Request.Tag;
 using Share.DTO.Response.Tag;
 using Share.Exceptions;
@@ -10,6 +11,7 @@ using Share.Tool;
 using Share.Tool.MySQL;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Share.Services.Tag
 {
@@ -77,10 +79,7 @@ namespace Share.Services.Tag
                         string.Concat(
                             string.Concat("https://www.youtube.com/watch?v=", item.ls_url),
                             "\t",
-                            JsonSerializer.Serialize(
-                                JsonSerializer.Deserialize<List<AddTagRequest>>(item.tags),
-                                options
-                            )
+                            FormatTagListToJson(item.tags)
                         )
                     )
                 );
@@ -130,7 +129,6 @@ namespace Share.Services.Tag
                 throw;
             }
         }
-
 
         public uint InsertTag(AddTagRequest request)
         {
@@ -209,6 +207,15 @@ namespace Share.Services.Tag
                 _logger.LogError(ex.ToString());
                 throw;
             }
+        }
+
+        private string FormatTagListToJson(string tags)
+        {
+            var json = JsonSerializer.Serialize(
+                JsonSerializer.Deserialize<List<TagDTO>>(tags),
+                options
+            );
+            return json.Replace("\":", "\": ").Replace("\",\"", "\", \"");
         }
     }
 }

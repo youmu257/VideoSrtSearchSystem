@@ -23,18 +23,19 @@ namespace VideoSrtSearchSystem.Controllers
     ) : Controller
     {
         [HttpGet]
-        public IActionResult Home(string keyword = "", int page = 1)
+        public IActionResult Home(string keyword = "", string tagKeyword = "", int page = 1)
         {
-            return SearchVideo(keyword, page);
+            return SearchVideo(keyword, tagKeyword, page);
         }
 
         [HttpGet]
         [Route("home")]
-        public IActionResult SearchVideo(string keyword = "", int page = 1)
+        public IActionResult SearchVideo(string keyword = "", string tagKeyword = "", int page = 1)
         {
             var request = new SearchRequest
             {
                 Keyword = keyword,
+                TagKeyword = tagKeyword,
                 Page = page,
             };
             var videoResponse = _liveStreamingService.GetAllVideo(request);

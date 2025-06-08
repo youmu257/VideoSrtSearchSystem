@@ -36,16 +36,19 @@
                             <tr>
                                 <td>
                                     <input type="hidden" id="tagId" value="@tag.Id" />
-                                    <input type="text" id="tagName" class="form-control" value="@tag.TagName">
+                                    <input type="text" id="tagName" class="form-control" value="@tag.TagName" readonly>
                                 </td>
                                 <td>
                                     <select id="typeSelect" name="type" class="form-select">
                                         <option value="">請選擇類型</option>
                                         @foreach (var type in Video.TagTypeList)
                                         {
-                                            <option value="@type.Id" selected="@(type.Id.Value == tag.TagType ? "selected" : null)">@type.TypeName</option>
+                                            <option value="@type.Id" selected="@(type.Id.Value == tag.TagType ? "selected" : null)" readonly>@type.TypeName</option>
                                         }
                                     </select>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)">刪除</button>
                                 </td>
                             </tr>
                         }
@@ -104,6 +107,12 @@
 
         // 將新行添加到 tbody
         tbody.appendChild(newRow);
+    }
+    function deleteRow(button) {
+        // 獲取要刪除的行
+        var row = button.closest('tr');
+        // 從表格中移除該行
+        row.parentNode.removeChild(row);
     }
     function save() {
         var guid = document.getElementById("videoGuid").value;

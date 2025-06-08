@@ -7,7 +7,7 @@ namespace Share.Repositorys.LiveStraming
 {
     public class LiveStreamingRepository(IMySqlTool _mySqlTool) : ILiveStreamingRepository
     {
-        public List<LiveStreamingModel> GetAll(string keyword, int page, int pageSize, MySqlConnection? connection = null)
+        public List<LiveStreamingModel> GetAll(string keyword, string tagKeyword, int page, int pageSize, MySqlConnection? connection = null)
         {
             try
             {
@@ -18,6 +18,12 @@ namespace Share.Repositorys.LiveStraming
                     nameof(LiveStreamingModel.ls_url),
                 };
                 var query = new Query(LiveStreamingModel.TableName);
+                if (!string.IsNullOrEmpty(tagKeyword))
+                {
+                    query = query.Join(LiveStreamingTagMappingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingTagMappingModel.lstm_ls_id))
+                        .Join(LiveStreamingTagModel.TableName, nameof(LiveStreamingTagMappingModel.lstm_lst_id), nameof(LiveStreamingTagModel.lst_id))
+                        .WhereLike(nameof(LiveStreamingTagModel.lst_name), $"%{tagKeyword}%");
+                }
                 if (!string.IsNullOrEmpty(keyword))
                 {
                     query = query.WhereLike(nameof(LiveStreamingModel.ls_title), $"%{keyword}%");
@@ -25,6 +31,7 @@ namespace Share.Repositorys.LiveStraming
                 query = query.OrderByDesc(nameof(LiveStreamingModel.ls_createtime))
                     .Offset(page * pageSize)
                     .Limit(pageSize)
+                    .GroupBy(cols)
                     .Select(cols);
                 return _mySqlTool.SelectMany<LiveStreamingModel>(connection, query);
             }
@@ -57,7 +64,7 @@ namespace Share.Repositorys.LiveStraming
             }
         }
 
-        public int GetCount(string keyword, MySqlConnection? connection = null)
+        public int GetCount(string keyword, string tagKeyword, MySqlConnection? connection = null)
         {
             try
             {
@@ -66,6 +73,12 @@ namespace Share.Repositorys.LiveStraming
                     nameof(LiveStreamingModel.ls_id),
                 };
                 var query = new Query(LiveStreamingModel.TableName);
+                if (!string.IsNullOrEmpty(tagKeyword))
+                {
+                    query = query.Join(LiveStreamingTagMappingModel.TableName, nameof(LiveStreamingModel.ls_id), nameof(LiveStreamingTagMappingModel.lstm_ls_id))
+                        .Join(LiveStreamingTagModel.TableName, nameof(LiveStreamingTagMappingModel.lstm_lst_id), nameof(LiveStreamingTagModel.lst_id))
+                        .WhereLike(nameof(LiveStreamingTagModel.lst_name), $"%{tagKeyword}%");
+                }
                 if (!string.IsNullOrEmpty(keyword))
                 {
                     query = query.WhereLike(nameof(LiveStreamingModel.ls_title), $"%{keyword}%");
