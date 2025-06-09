@@ -8,6 +8,7 @@ namespace Share.Services.Tag
     {
         GetAllTagResponse SearchTags(SearchTagRequest request);
         string GetTagsMappingList();
+        string GetTagsList(int tagType);
         List<TagTypeResponse> GetTagType();
         LiveStreamingTagModel GetTagData(LstId tagId);
         uint InsertTag(AddTagRequest request);

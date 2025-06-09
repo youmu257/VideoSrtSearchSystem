@@ -11,7 +11,6 @@ using Share.Tool;
 using Share.Tool.MySQL;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace Share.Services.Tag
 {
@@ -83,6 +82,23 @@ namespace Share.Services.Tag
                         )
                     )
                 );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                throw;
+            }
+        }
+
+        public string GetTagsList(int tagType)
+        {
+            try
+            {
+                using var connection = _mySQLConnectionProvider.GetNormalCotext();
+                // 取得標籤列表
+                var tagList = _liveStreamingTagRepository.GetByType(tagType, connection);
+                // 把字串每筆換行間隔
+                return string.Join("\n", tagList.Select(item => item.lst_name));
             }
             catch (Exception ex)
             {

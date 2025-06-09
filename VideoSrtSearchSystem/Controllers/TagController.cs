@@ -110,5 +110,22 @@ namespace VideoSrtSearchSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// 取得影片的標籤 JSON
+        /// </summary>
+        [HttpGet]
+        [Route("list")]
+        public IActionResult GetTagList(int type)
+        {
+            try
+            {
+                var result = _tagService.GetTagsList(type);
+                return OkText(result);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResponse(ex);
+            }
+        }
     }
 }

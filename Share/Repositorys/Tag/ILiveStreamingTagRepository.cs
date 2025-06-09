@@ -7,6 +7,7 @@ namespace Share.Repositorys.Tag
     {
         List<LiveStreamingTagModel> GetByTypeAndKeyword(LsttType type, string keyword, int page, int pageSize, MySqlConnection connection);
         List<UrlAndTagsModel> GetByTypeMapping(MySqlConnection connection);
+        List<LiveStreamingTagModel> GetByType(int type, MySqlConnection connection);
         LiveStreamingTagModel GetById(LstId tagId, MySqlConnection connection);
         LiveStreamingTagModel GetByKeyword(string keyword, MySqlConnection connection);
         LiveStreamingTagModel GetByTypeAndKeyword(LsttType type, string keyword, MySqlConnection connection);

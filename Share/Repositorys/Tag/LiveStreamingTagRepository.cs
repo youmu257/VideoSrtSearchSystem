@@ -76,6 +76,19 @@ namespace Share.Repositorys.Tag
             }
         }
 
+        public List<LiveStreamingTagModel> GetByType(int type, MySqlConnection connection)
+        {
+            var cols = new string[]
+            {
+                nameof(LiveStreamingTagModel.lst_name),
+            };
+            var query = new Query(LiveStreamingTagModel.TableName)
+                .Where(nameof(LiveStreamingTagModel.lst_type), type)
+                .Select(cols)
+                .OrderBy(nameof(LiveStreamingTagModel.lst_name));
+            return _mySqlTool.SelectMany<LiveStreamingTagModel>(connection, query);
+        }
+
         public LiveStreamingTagModel GetById(LstId tagId, MySqlConnection connection)
         {
             try
