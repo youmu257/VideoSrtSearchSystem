@@ -4,7 +4,6 @@
     ViewData["Title"] = "影片查詢主頁";
     var items = ViewData.ContainsKey("VideoList") ? ViewData["VideoList"] as List<VideoResponse> : new List<VideoResponse>();
     string keyword = ViewData["Keyword"] as string;
-    string tagKeyword = ViewData["TagKeyword"] as string;
     int page = ViewData["Page"] == null ? 1 : (int)ViewData["Page"];
     int totalPage = ViewData["TotalPage"] == null ? 1 : (int)ViewData["TotalPage"];
 }
@@ -15,7 +14,6 @@
             <div class="search">
                 <i class="fa fa-search"></i>
                 <input type="text" id="searchQuery" class="form-control" placeholder="查詢關鍵字" value="@keyword">
-                <input type="text" id="tagQuery" class="form-control mb-2" placeholder="標籤關鍵字" value="@tagKeyword">
                 <button class="btn btn-primary" onclick="redirectToSearchResults()">Search</button>
             </div>
         </div>
@@ -68,17 +66,12 @@
 <script type="text/javascript">
     function redirectToSearchResults(pageNumber) {
         var query = document.getElementById("searchQuery").value;
-        var tag = document.getElementById("tagQuery").value;
         var encodedQuery = encodeURIComponent(query);
-        var encodedTag = encodeURIComponent(tag);
-
-        // 構建URL參數
-        var params = 'keyword=' + encodedQuery + '&tagKeyword=' + encodedTag;
 
         // 如果提供了頁碼，將其添加到URL，否則使用預設值1
         var pageParam = pageNumber ? '&page=' + pageNumber : '';
-
-        window.location.href = 'home?' + params + pageParam;
+        // 構建URL參數
+        window.location.href = 'home?keyword=' + encodedQuery + pageParam;
     }
 
     // 為分頁連結添加事件監聽器
