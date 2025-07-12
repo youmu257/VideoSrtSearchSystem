@@ -41,6 +41,21 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+    - name: 🔄 Execute deployment on server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.SERVER_IP }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+        timeout: 300s
+        script: |
+          set -e
+          cd /home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}
+          
+          echo "🔍 Current directory: $(pwd)"
+          echo "📁 Files in directory:"
+          ls -la
     - name: 🔍 Check if secrets exist
       run: |
         if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
