@@ -41,6 +41,20 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: 🔍 Check if secrets exist
+      run: |
+        if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
+          echo "❌ SERVER_SSH_KEY is NOT set"
+          exit 1
+        else
+          echo "✅ SERVER_SSH_KEY is set"
+        fi
+        if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
+          echo "❌ SERVER_USERNAME is NOT set"
+          exit 1
+        else
+          echo "✅ SERVER_USERNAME is set"
+        fi
     - name: 🛎️ Checkout code
       uses: actions/checkout@v4
       with:
@@ -177,7 +191,7 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_SSH_PORT || 22 }}
-        source: "${{ env.APP_NAME }}.tar.gz,docker-compose.prod.yml,DEPLOYMENT.md"
+        source: "${{ env.APP_NAME }}.tar.gz,docker-compose.prod.yml"
         target: "/home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}"
         timeout: 300s
         
