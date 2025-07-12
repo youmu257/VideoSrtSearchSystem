@@ -17,17 +17,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("corsapp",
-//        builder =>
-//        {
-//            builder//.WithOrigins("*")
-//                .AllowAnyHeader()
-//                .AllowAnyMethod()
-//                .AllowCredentials();
-//        });
-//});
+// 新增 CORS 設定，允許 localhost
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policyBuilder =>
+        {
+            policyBuilder.WithOrigins(
+                "http://localhost",
+                "http://localhost:3000",
+                "http://localhost:5000",
+                "http://localhost:5173",
+                "http://localhost:4200",
+                "http://localhost:8000",
+                "https://youmu257.github.io"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
+});
 builder.Services.AddOpenApiDocument();
 
 #region config
@@ -76,6 +85,9 @@ if (!app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 //app cors
 //app.UseCors("corsapp");
+
+// 啟用 CORS
+app.UseCors("AllowLocalhost");
 
 app.UseStaticFiles();
 

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  videosrtsearch:
+    image: videosrtsearch:latest
+    container_name: videosrtsearch-app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - TZ=Asia/Taipei
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+    volumes:
+      # 設定檔案（如果存在）
+      - ./appsettings.Production.json:/app/appsettings.Production.json:ro
+      # 日誌目錄
+      - ./logs:/app/logs
+      # 如果有靜態檔案需要持久化
+      - ./wwwroot/uploads:/app/wwwroot/uploads
+    networks:
+      - videosrtsearch-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "traefik.enable=false"
+      - "service.name=videosrtsearch"
+      - "service.version=latest"
+
+  # 可選：添加反向代理（如果需要 HTTPS）
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: videosrtsearch-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - videosrtsearch
+  #   networks:
+  #     - videosrtsearch-network
+
+networks:
+  videosrtsearch-network:
+    driver: bridge
+    name: videosrtsearch-network
+
+volumes:
+  videosrtsearch-logs:
+    driver: local
+  videosrtsearch-uploads:
+    driver: local
