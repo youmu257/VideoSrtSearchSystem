@@ -39,7 +39,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
-    
+    environment: production
     steps:
     - name: 🔍 Check if secrets exist
       run: |
