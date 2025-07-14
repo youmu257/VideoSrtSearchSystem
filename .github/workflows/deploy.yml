@@ -35,15 +35,14 @@ env:
   APP_NAME: 'videosrtsearch'
 
 jobs:
-  # 建置和測試階段
-  build-and-test:
-    name: Build and Test
+  # SSH 連接檢查階段
+  ssh-connection-check:
+    name: Check SSH Connection
     runs-on: ubuntu-latest
-    needs: env-check
     environment: production
     steps:
-    - name: 🔍 Check if secrets exist
-      run: |
+      - name: 🔍 Check if secrets exist
+        run: |
           if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
             echo "❌ SERVER_SSH_KEY is NOT set"
             exit 1
@@ -57,6 +56,45 @@ jobs:
           else
             echo "✅ SERVER_USERNAME is set"
           fi
+
+          echo "🔍 SERVER_IP: ${{ env.SERVER_IP }}"
+          echo "🔍 APP_NAME: ${{ env.APP_NAME }}"
+
+      - name: 🔗 Test SSH connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+          timeout: 30s
+          script: |
+            echo "✅ SSH connection successful!"
+            echo "🏠 Current user: $(whoami)"
+            echo "🏠 Home directory: $HOME"
+            echo "📁 Current directory: $(pwd)"
+            echo "💻 System info: $(uname -a)"
+            echo "🐳 Docker version: $(docker --version 2>/dev/null || echo 'Docker not found')"
+            echo "🐙 Docker Compose version: $(docker-compose --version 2>/dev/null || echo 'Docker Compose not found')"
+            
+            # 檢查應用程式目錄
+            app_dir="/home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}"
+            if [ -d "$app_dir" ]; then
+              echo "📂 App directory exists: $app_dir"
+              echo "📁 Files in app directory:"
+              ls -la "$app_dir" || echo "Cannot list directory contents"
+            else
+              echo "📂 App directory does not exist, will be created: $app_dir"
+              mkdir -p "$app_dir" || echo "Failed to create directory"
+            fi
+
+  # 建置和測試階段
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: ssh-connection-check
+    environment: production
+    steps:
     - name: 🛎️ Checkout code
       uses: actions/checkout@v4
       with:
