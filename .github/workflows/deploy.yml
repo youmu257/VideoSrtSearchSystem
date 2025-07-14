@@ -38,37 +38,40 @@ jobs:
   env-check:
     name: Check Environment
     runs-on: self-hosted
-    environment: production
+    environment:
+      name: production
     steps:
-    - name: 🔍 Check if secrets exist
-      run: |
-        if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
-          echo "❌ SERVER_SSH_KEY is NOT set"
-          exit 1
-        else
-          echo "✅ SERVER_SSH_KEY is set"
-        fi
-        if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
-          echo "❌ SERVER_USERNAME is NOT set"
-          exit 1
-        else
-          echo "✅ SERVER_USERNAME is set"
-        fi
-    - name: 🔄 Execute deployment on server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ env.SERVER_IP }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_SSH_PORT || 22 }}
-        timeout: 300s
-        script: |
-          set -e
-          cd /home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}
-          
-          echo "🔍 Current directory: $(pwd)"
-          echo "📁 Files in directory:"
-          ls -la
+      - name: 🔍 Check if secrets exist
+        run: |
+          if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
+            echo "❌ SERVER_SSH_KEY is NOT set"
+            exit 1
+          else
+            echo "✅ SERVER_SSH_KEY is set"
+          fi
+
+          if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
+            echo "❌ SERVER_USERNAME is NOT set"
+            exit 1
+          else
+            echo "✅ SERVER_USERNAME is set"
+          fi
+
+      - name: 🔄 Execute deployment on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || '22' }}
+          timeout: 300s
+          script: |
+            set -e
+            cd /home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}
+            
+            echo "🔍 Current directory: $(pwd)"
+            echo "📁 Files in directory:"
+            ls -la
   # 建置和測試階段
   build-and-test:
     name: Build and Test
