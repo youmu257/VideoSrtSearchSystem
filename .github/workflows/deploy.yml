@@ -42,7 +42,7 @@ jobs:
     environment: production
     steps:
       - name: 🔍 Check if secrets exist
-        shell: pwsh
+        shell: push
         run: |
           if ([string]::IsNullOrEmpty("${{ secrets.SERVER_SSH_KEY }}")) {
             Write-Host "❌ SERVER_SSH_KEY is NOT set"
