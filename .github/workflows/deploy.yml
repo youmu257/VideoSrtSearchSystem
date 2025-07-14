@@ -37,7 +37,7 @@ env:
 jobs:
   env-check:
     name: Check Environment
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
     steps:
     - name: 🔍 Check if secrets exist
@@ -189,7 +189,7 @@ jobs:
   # 部署到生產環境
   deploy-production:
     name: Deploy to Production
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build-and-test, build-docker]
     if: (github.event_name == 'push' && github.ref == 'refs/heads/test') || (github.event_name == 'workflow_dispatch')
     environment: production
