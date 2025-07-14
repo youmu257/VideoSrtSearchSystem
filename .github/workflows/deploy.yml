@@ -38,7 +38,7 @@ jobs:
   # SSH 連接檢查階段
   ssh-connection-check:
     name: Check SSH Connection
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
     steps:
       - name: 🔍 Check if secrets exist
