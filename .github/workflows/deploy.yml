@@ -40,9 +40,10 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     needs: env-check
+    environment: production
     steps:
     - name: 🔍 Check if secrets exist
-        run: |
+      run: |
           if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
             echo "❌ SERVER_SSH_KEY is NOT set"
             exit 1
