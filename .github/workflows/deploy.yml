@@ -35,12 +35,25 @@ env:
   APP_NAME: 'videosrtsearch'
 
 jobs:
-  # 建置和測試階段
-  build-and-test:
-    name: Build and Test
+  env-check:
+    name: Check Environment
     runs-on: ubuntu-latest
     environment: production
     steps:
+    - name: 🔍 Check if secrets exist
+      run: |
+        if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
+          echo "❌ SERVER_SSH_KEY is NOT set"
+          exit 1
+        else
+          echo "✅ SERVER_SSH_KEY is set"
+        fi
+        if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
+          echo "❌ SERVER_USERNAME is NOT set"
+          exit 1
+        else
+          echo "✅ SERVER_USERNAME is set"
+        fi
     - name: 🔄 Execute deployment on server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -56,20 +69,11 @@ jobs:
           echo "🔍 Current directory: $(pwd)"
           echo "📁 Files in directory:"
           ls -la
-    - name: 🔍 Check if secrets exist
-      run: |
-        if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
-          echo "❌ SERVER_SSH_KEY is NOT set"
-          exit 1
-        else
-          echo "✅ SERVER_SSH_KEY is set"
-        fi
-        if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
-          echo "❌ SERVER_USERNAME is NOT set"
-          exit 1
-        else
-          echo "✅ SERVER_USERNAME is set"
-        fi
+  # 建置和測試階段
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
     - name: 🛎️ Checkout code
       uses: actions/checkout@v4
       with:
