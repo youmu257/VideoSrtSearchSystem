@@ -42,23 +42,24 @@ jobs:
     environment: production
     steps:
       - name: 🔍 Check if secrets exist
+        shell: pwsh
         run: |
-          if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
-            echo "❌ SERVER_SSH_KEY is NOT set"
+          if ([string]::IsNullOrEmpty("${{ secrets.SERVER_SSH_KEY }}")) {
+            Write-Host "❌ SERVER_SSH_KEY is NOT set"
             exit 1
-          else
-            echo "✅ SERVER_SSH_KEY is set"
-          fi
+          } else {
+            Write-Host "✅ SERVER_SSH_KEY is set"
+          }
 
-          if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
-            echo "❌ SERVER_USERNAME is NOT set"
+          if ([string]::IsNullOrEmpty("${{ secrets.SERVER_USERNAME }}")) {
+            Write-Host "❌ SERVER_USERNAME is NOT set"
             exit 1
-          else
-            echo "✅ SERVER_USERNAME is set"
-          fi
+          } else {
+            Write-Host "✅ SERVER_USERNAME is set"
+          }
 
-          echo "🔍 SERVER_IP: ${{ env.SERVER_IP }}"
-          echo "🔍 APP_NAME: ${{ env.APP_NAME }}"
+          Write-Host "🔍 SERVER_IP: ${{ env.SERVER_IP }}"
+          Write-Host "🔍 APP_NAME: ${{ env.APP_NAME }}"
 
       - name: 🔗 Test SSH connection
         uses: appleboy/ssh-action@v1.0.3
