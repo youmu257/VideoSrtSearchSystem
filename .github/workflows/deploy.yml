@@ -38,90 +38,42 @@ jobs:
   # SSH 連接檢查階段
   ssh-connection-check:
     name: Check SSH Connection
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
     steps:
-      - name: 🔍 Check if secrets exist
-        shell: bash
+      - name: 準備 SSH 金鑰和 known_hosts
+        shell: powershell
         run: |
-          if [[ -z "${{ secrets.SERVER_SSH_KEY }}" ]]; then
-            echo "❌ SERVER_SSH_KEY is NOT set"
-            exit 1
-          else
-            echo "✅ SERVER_SSH_KEY is set"
-          fi
+          $sshDir = "$env:USERPROFILE\.ssh"
+          New-Item -ItemType Directory -Force -Path $sshDir | Out-Null
 
-          if [[ -z "${{ secrets.SERVER_USERNAME }}" ]]; then
-            echo "❌ SERVER_USERNAME is NOT set"
-            exit 1
-          else
-            echo "✅ SERVER_USERNAME is set"
-          fi
+          # 建立 SSH 私鑰
+          $keyPath = "$sshDir\id_ed25519"
+          Set-Content -Path $keyPath -Value "${{ secrets.SERVER_SSH_KEY }}" -NoNewline
 
-          echo "🔍 SERVER_IP: ${{ env.SERVER_IP }}"
-          echo "🔍 APP_NAME: ${{ env.APP_NAME }}"
+          # 設定權限
+          icacls $keyPath /inheritance:r /grant:r "$($env:USERNAME):R"
 
-      - name: 🔗 Test SSH connection
-        shell: bash
+          # 取得伺服器指紋，避免首次連線時卡住
+          ssh-keyscan $env:SERVER_IP | Out-File -Encoding ascii -FilePath "$sshDir\known_hosts"
+
+      - name: 測試 SSH 是否能連到 ${{ env.SERVER_IP }}
+        shell: powershell
         run: |
-          # 測試網路連接
-          echo "🌐 Testing network connectivity to ${{ env.SERVER_IP }}..."
-          
-          # 檢查網路連接
-          if ! nc -z ${{ env.SERVER_IP }} ${{ secrets.SERVER_SSH_PORT || 22 }}; then
-            echo "❌ Network connection to ${{ env.SERVER_IP }}:${{ secrets.SERVER_SSH_PORT || 22 }} failed!"
-            exit 1
-          else
-            echo "✅ Network connection to ${{ env.SERVER_IP }}:${{ secrets.SERVER_SSH_PORT || 22 }} successful!"
-          fi
+          $keyPath = "$env:USERPROFILE\.ssh\id_ed25519"
+          $username = "${{ secrets.SERVER_USERNAME }}"
+          $ip = "$env:SERVER_IP"
 
-          # 創建臨時 SSH 私鑰檔案
-          TEMP_DIR=$(mktemp -d)
-          KEY_FILE="$TEMP_DIR/temp_ssh_key"
-          
-          # 寫入 SSH 私鑰
-          echo "${{ secrets.SERVER_SSH_KEY }}" > "$KEY_FILE"
-          chmod 600 "$KEY_FILE"
-          
-          echo "🔐 SSH key file created successfully"
-          
-          # 測試 SSH 連接
-          echo "🚀 Executing SSH connection test..."
-          
-          ssh -i "$KEY_FILE" \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
-              -o ConnectTimeout=30 \
-              -p ${{ secrets.SERVER_SSH_PORT || 22 }} \
-              ${{ secrets.SERVER_USERNAME }}@${{ env.SERVER_IP }} \
-              'echo "✅ SSH connection successful!"; 
-               echo "🏠 Current user:" $(whoami); 
-               echo "🏠 Home directory:" $HOME; 
-               echo "📁 Current directory:" $(pwd); 
-               echo "💻 System info:" $(uname -a); 
-               echo "🐳 Docker version:" $(docker --version 2>/dev/null || echo "Docker not found"); 
-               echo "🐙 Docker Compose version:" $(docker-compose --version 2>/dev/null || echo "Docker Compose not found"); 
-               app_dir="/home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}"; 
-               if [ -d "$app_dir" ]; then 
-                 echo "📂 App directory exists: $app_dir"; 
-                 echo "📁 Files in app directory:"; 
-                 ls -la "$app_dir" || echo "Cannot list directory contents"; 
-               else 
-                 echo "📂 App directory does not exist, will be created: $app_dir"; 
-                 mkdir -p "$app_dir" || echo "Failed to create directory"; 
-               fi'
-          
-          if [ $? -eq 0 ]; then
-            echo "✅ SSH connection test passed!"
-          else
-            echo "❌ SSH connection test failed!"
-            exit 1
-          fi
-          
-          # 清理臨時檔案
-          rm -rf "$TEMP_DIR"
-          echo "🧹 Temporary SSH key file cleaned up"
+          Write-Host "🚀 嘗試連線：$username@$ip"
 
+          ssh -i $keyPath -o "StrictHostKeyChecking=yes" -o "BatchMode=yes" "$username@$ip" exit
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ SSH 成功連線到 $ip"
+          } else {
+            Write-Host "❌ SSH 連線失敗，錯誤碼：$LASTEXITCODE"
+            exit 1
+          }
   # 建置和測試階段
   build-and-test:
     name: Build and Test
@@ -245,7 +197,7 @@ jobs:
   # 部署到生產環境
   deploy-production:
     name: Deploy to Production
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build-and-test, build-docker]
     if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/test')) || (github.event_name == 'workflow_dispatch')
     environment: production
