@@ -41,39 +41,154 @@ jobs:
     runs-on: self-hosted
     environment: production
     steps:
-      - name: 準備 SSH 金鑰和 known_hosts
-        shell: powershell
+      - name: 🔍 Check if secrets exist
+        shell: wsl-bash {0}
         run: |
-          $sshDir = "$env:USERPROFILE\.ssh"
-          New-Item -ItemType Directory -Force -Path $sshDir | Out-Null
-
-          # 建立 SSH 私鑰
-          $keyPath = "$sshDir\id_ed25519"
-          Set-Content -Path $keyPath -Value "${{ secrets.SERVER_SSH_KEY }}" -NoNewline
-
-          # 設定權限
-          icacls $keyPath /inheritance:r /grant:r "$($env:USERNAME):R"
-
-          # 取得伺服器指紋，避免首次連線時卡住
-          ssh-keyscan $env:SERVER_IP | Out-File -Encoding ascii -FilePath "$sshDir\known_hosts"
-
-      - name: 測試 SSH 是否能連到 ${{ env.SERVER_IP }}
-        shell: powershell
-        run: |
-          $keyPath = "$env:USERPROFILE\.ssh\id_ed25519"
-          $username = "${{ secrets.SERVER_USERNAME }}"
-          $ip = "$env:SERVER_IP"
-
-          Write-Host "🚀 嘗試連線：$username@$ip"
-
-          ssh -i $keyPath -o "StrictHostKeyChecking=yes" -o "BatchMode=yes" "$username@$ip" exit
-
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ SSH 成功連線到 $ip"
-          } else {
-            Write-Host "❌ SSH 連線失敗，錯誤碼：$LASTEXITCODE"
+          echo "🔍 Checking if required secrets are set..."
+          
+          if [[ -z "${{ secrets.SERVER_SSH_KEY }}" ]]; then
+            echo "❌ SERVER_SSH_KEY is NOT set"
             exit 1
-          }
+          else
+            echo "✅ SERVER_SSH_KEY is set"
+          fi
+
+          if [[ -z "${{ secrets.SERVER_USERNAME }}" ]]; then
+            echo "❌ SERVER_USERNAME is NOT set"
+            exit 1
+          else
+            echo "✅ SERVER_USERNAME is set"
+          fi
+
+          echo "🔍 SERVER_IP: ${{ env.SERVER_IP }}"
+          echo "🔍 APP_NAME: ${{ env.APP_NAME }}"
+
+      - name: 🔗 Test SSH connection
+        shell: wsl-bash {0}
+        run: |
+          # 測試網路連接
+          echo "🌐 Testing network connectivity to ${{ env.SERVER_IP }}..."
+          
+          # 檢查網路連接
+          PORT=${{ secrets.SERVER_SSH_PORT || 22 }}
+          echo "🔌 Testing connection to ${{ env.SERVER_IP }}:$PORT..."
+          
+          if ! nc -z ${{ env.SERVER_IP }} $PORT; then
+            echo "❌ Network connection to ${{ env.SERVER_IP }}:$PORT failed!"
+            # 嘗試使用 telnet 作為備用方案
+            if command -v telnet >/dev/null 2>&1; then
+              echo "🔄 Trying with telnet as fallback..."
+              if timeout 10 telnet ${{ env.SERVER_IP }} $PORT 2>/dev/null | grep -q "Connected"; then
+                echo "✅ Network connection successful (via telnet)"
+              else
+                echo "❌ Network connection failed (telnet also failed)"
+                exit 1
+              fi
+            else
+              exit 1
+            fi
+          else
+            echo "✅ Network connection to ${{ env.SERVER_IP }}:$PORT successful!"
+          fi
+
+          # 創建臨時 SSH 私鑰檔案
+          TEMP_DIR=$(mktemp -d)
+          KEY_FILE="$TEMP_DIR/temp_ssh_key"
+          
+          echo "🔐 Creating temporary SSH key file..."
+          
+          # 寫入 SSH 私鑰
+          echo "${{ secrets.SERVER_SSH_KEY }}" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          
+          echo "✅ SSH key file created successfully at: $KEY_FILE"
+          
+          # 檢查 SSH 客戶端
+          if ! command -v ssh >/dev/null 2>&1; then
+            echo "❌ SSH client not found in WSL"
+            echo "💡 Please install OpenSSH client in WSL:"
+            echo "   sudo apt update && sudo apt install openssh-client"
+            exit 1
+          fi
+          
+          echo "🔧 Using SSH client: $(which ssh)"
+          echo "🔧 SSH version: $(ssh -V 2>&1)"
+          
+          # 測試 SSH 連接
+          echo "🚀 Executing SSH connection test..."
+          
+          PORT=${{ secrets.SERVER_SSH_PORT || 22 }}
+          
+          # 準備 SSH 命令
+          SSH_CMD="ssh -i \"$KEY_FILE\" \
+                      -o StrictHostKeyChecking=no \
+                      -o UserKnownHostsFile=/dev/null \
+                      -o ConnectTimeout=30 \
+                      -o BatchMode=yes \
+                      -p $PORT \
+                      ${{ secrets.SERVER_USERNAME }}@${{ env.SERVER_IP }}"
+          
+          # 執行遠端命令
+          REMOTE_COMMANDS='
+          echo "✅ SSH connection successful!";
+          echo "🏠 Current user:" $(whoami);
+          echo "🏠 Home directory:" $HOME;
+          echo "📁 Current directory:" $(pwd);
+          echo "💻 System info:" $(uname -a);
+          echo "🐳 Docker version:" $(docker --version 2>/dev/null || echo "Docker not found");
+          echo "🐙 Docker Compose version:" $(docker-compose --version 2>/dev/null || echo "Docker Compose not found");
+          app_dir="/home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}";
+          if [ -d "$app_dir" ]; then
+            echo "📂 App directory exists: $app_dir";
+            echo "📁 Files in app directory:";
+            ls -la "$app_dir" || echo "Cannot list directory contents";
+          else
+            echo "📂 App directory does not exist, will be created: $app_dir";
+            mkdir -p "$app_dir" || echo "Failed to create directory";
+          fi
+          '
+          
+          echo "🔍 SSH Command: $SSH_CMD"
+          
+          # 執行 SSH 連接並捕獲輸出
+          if $SSH_CMD "$REMOTE_COMMANDS"; then
+            echo "✅ SSH connection test passed!"
+          else
+            SSH_EXIT_CODE=$?
+            echo "❌ SSH connection test failed with exit code: $SSH_EXIT_CODE"
+            
+            # 提供除錯資訊
+            echo "🔍 Debug Information:"
+            echo "   SSH Client: $(which ssh)"
+            echo "   SSH Version: $(ssh -V 2>&1)"
+            echo "   Key File: $KEY_FILE"
+            echo "   Key File Exists: $(test -f "$KEY_FILE" && echo "Yes" || echo "No")"
+            echo "   Key File Permissions: $(ls -l "$KEY_FILE" 2>/dev/null || echo "Cannot read")"
+            
+            if [ -f "$KEY_FILE" ]; then
+              echo "   Key File Size: $(wc -c < "$KEY_FILE") bytes"
+              echo "   Key File First Line: $(head -n1 "$KEY_FILE")"
+              echo "   Key File Last Line: $(tail -n1 "$KEY_FILE")"
+            fi
+            
+            # 嘗試詳細的 SSH 除錯
+            echo "🔍 Attempting SSH with verbose output:"
+            ssh -vvv -i "$KEY_FILE" \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                -o ConnectTimeout=10 \
+                -o BatchMode=yes \
+                -p $PORT \
+                ${{ secrets.SERVER_USERNAME }}@${{ env.SERVER_IP }} \
+                "echo 'Debug connection successful'" 2>&1 | head -n 20
+            
+            exit 1
+          fi
+          
+          # 清理臨時檔案
+          rm -rf "$TEMP_DIR"
+          echo "🧹 Temporary SSH key file cleaned up"
+
   # 建置和測試階段
   build-and-test:
     name: Build and Test
