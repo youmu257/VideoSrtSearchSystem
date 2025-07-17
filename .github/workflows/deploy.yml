@@ -115,7 +115,7 @@ jobs:
             $sshArgs = @(
               "-i", $tempKey,
               "-o", "StrictHostKeyChecking=no",
-              "-o", "UserKnownHostsFile=NUL",
+              "-o", "UserKnownHostsFile=NULL",
               "-o", "ConnectTimeout=10",
               "-o", "BatchMode=yes",
               "-p", $sshPort,
