@@ -65,16 +65,42 @@ jobs:
             # 將私鑰寫入臨時檔案
             $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding UTF8 -NoNewline
 
-            # 設定檔案權限（Windows 模式）
+            # 設定嚴格的檔案權限（Windows 模式）- SSH 要求私鑰只有擁有者可以存取
+            Write-Host "🔐 Setting strict file permissions for SSH key..."
+            
+            # 獲取當前檔案的 ACL
             $acl = Get-Acl $tempKey
+            
+            # 禁用繼承並移除所有現有權限
             $acl.SetAccessRuleProtection($true, $false)
-            $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($env:USERNAME, "FullControl", "Allow")
+            
+            # 清除所有現有的存取規則
+            $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) }
+            
+            # 只給當前使用者完全控制權限
+            $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+            $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+              $currentUser, 
+              "FullControl", 
+              "Allow"
+            )
             $acl.SetAccessRule($accessRule)
-            Set-Acl $tempKey $acl
+            
+            # 套用新的權限設定
+            Set-Acl -Path $tempKey -AclObject $acl
+            
+            Write-Host "🔑 File permissions set for user: $currentUser"
+            
+            # 驗證檔案權限
+            $newAcl = Get-Acl $tempKey
+            Write-Host "📋 File permissions:"
+            $newAcl.Access | ForEach-Object {
+              Write-Host "  - $($_.IdentityReference): $($_.FileSystemRights)"
+            }
             
             # 測試 SSH 連接
             $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
-            $sshUser = "deployer@$env:SERVER_IP"
+            $sshUser = "$env:SERVER_USERNAME@$env:SERVER_IP"
             $sshCommand = "echo 'SSH connection successful' && uname -a && date && df -h / | tail -1 && free -h | head -2"
 
             Write-Host "🔄 Attempting SSH connection..."
@@ -95,7 +121,8 @@ jobs:
             )
             
             $sshResult = & ssh @sshArgs 2>&1
-            Write-Host "Debug leo1"
+            Write-Host "Debug: SSH command executed"
+            
             if ($LASTEXITCODE -eq 0) {
               Write-Host "✅ SSH connection test passed!"
               Write-Host "📋 Server information:"
