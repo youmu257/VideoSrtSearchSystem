@@ -42,12 +42,10 @@ jobs:
     environment: production
     steps:
       - name: 🔗 Test SSH connection
-        shell: powershell
+        shell: bash
         run: |
           echo "🚀 Testing SSH connection to ${{ env.SERVER_IP }}..."
-          echo "leotest"
-          wsl
-          ls
+          
           # 創建臨時 SSH 私鑰檔案
           TEMP_KEY=$(mktemp)
           echo "${{ secrets.SERVER_SSH_KEY }}" > "$TEMP_KEY"
