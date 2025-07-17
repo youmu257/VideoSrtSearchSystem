@@ -35,27 +35,66 @@ env:
   APP_NAME: 'videosrtsearch'
 
 jobs:
-  # SSH 連接檢查階段
+  # SSH 連接檢查階段 - 使用 Windows self-hosted runner
   ssh-connection-check:
     name: Check SSH Connection
     runs-on: self-hosted
     environment: production
     steps:
       - name: 🔗 Test SSH connection
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_IP }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
-          timeout: 30s
-          script: |
-            echo "🚀 Testing SSH connection to ${{ env.SERVER_IP }}..."
-            echo "✅ SSH connection test passed!"
-            echo "🔍 Server info: $(uname -a)"
-            echo "🕒 Server time: $(date)"
-            echo "💾 Disk usage: $(df -h / | tail -1)"
-            echo "🧠 Memory usage: $(free -h | head -2)"
+        shell: pwsh
+        run: |
+          Write-Host "🚀 Testing SSH connection to $env:SERVER_IP..."
+          
+          # 檢查是否有 SSH 客戶端
+          if (-not (Get-Command ssh -ErrorAction SilentlyContinue)) {
+            Write-Host "❌ SSH client not found. Please install OpenSSH client."
+            Write-Host "💡 Install with: Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0"
+            exit 1
+          }
+          
+          # 創建臨時 SSH 私鑰檔案
+          $tempDir = [System.IO.Path]::GetTempPath()
+          $tempKey = Join-Path $tempDir "ssh_key_$(Get-Random)"
+          
+          try {
+            # 將私鑰寫入臨時檔案
+            $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding UTF8 -NoNewline
+            
+            # 設定檔案權限（Windows 模式）
+            $acl = Get-Acl $tempKey
+            $acl.SetAccessRuleProtection($true, $false)
+            $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($env:USERNAME, "FullControl", "Allow")
+            $acl.SetAccessRule($accessRule)
+            Set-Acl $tempKey $acl
+            
+            # 測試 SSH 連接
+            $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
+            
+            Write-Host "🔄 Attempting SSH connection..."
+            $sshResult = & ssh -i $tempKey -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ConnectTimeout=10 -o BatchMode=yes -p $sshPort "$env:SERVER_USERNAME@$env:SERVER_IP" "echo '✅ SSH connection successful'; uname -a; date; df -h / | tail -1; free -h | head -2" 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✅ SSH connection test passed!"
+              Write-Host "📋 Server information:"
+              Write-Host $sshResult
+            } else {
+              Write-Host "❌ SSH connection test failed!"
+              Write-Host "🔍 Error details:"
+              Write-Host $sshResult
+              exit 1
+            }
+          }
+          catch {
+            Write-Host "❌ SSH connection test failed with error: $_"
+            exit 1
+          }
+          finally {
+            # 清理臨時檔案
+            if (Test-Path $tempKey) {
+              Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
+            }
+          }
 
   # 建置和測試階段
   build-and-test:
