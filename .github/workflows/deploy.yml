@@ -97,6 +97,9 @@ jobs:
             $newAcl.Access | ForEach-Object {
               Write-Host "  - $($_.IdentityReference): $($_.FileSystemRights)"
             }
+            $path = $tempKey
+            icacls $path /inheritance:r
+            icacls $path /grant:r "$($env:USERNAME):R"
             
             # 測試 SSH 連接
             $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
