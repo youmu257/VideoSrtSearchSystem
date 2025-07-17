@@ -63,7 +63,7 @@ jobs:
           
           try {
             # 將私鑰寫入臨時檔案
-            $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding UTF8 -NoNewline
+            $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding ascii -NoNewline
 
             # 設定嚴格的檔案權限（Windows 模式）- SSH 要求私鑰只有擁有者可以存取
             Write-Host "🔐 Setting strict file permissions for SSH key..."
