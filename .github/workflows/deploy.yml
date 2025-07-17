@@ -42,32 +42,20 @@ jobs:
     environment: production
     steps:
       - name: 🔗 Test SSH connection
-        shell: bash
-        run: |
-          echo "🚀 Testing SSH connection to ${{ env.SERVER_IP }}..."
-          
-          # 創建臨時 SSH 私鑰檔案
-          TEMP_KEY=$(mktemp)
-          echo "${{ secrets.SERVER_SSH_KEY }}" > "$TEMP_KEY"
-          chmod 600 "$TEMP_KEY"
-          
-          # 測試 SSH 連接
-          if ssh -i "$TEMP_KEY" \
-                 -o StrictHostKeyChecking=no \
-                 -o UserKnownHostsFile=/dev/null \
-                 -o ConnectTimeout=10 \
-                 -o BatchMode=yes \
-                 -p ${{ secrets.SERVER_SSH_PORT || 22 }} \
-                 ${{ secrets.SERVER_USERNAME }}@${{ env.SERVER_IP }} \
-                 "echo 'SSH connection successful'"; then
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+          timeout: 30s
+          script: |
+            echo "🚀 Testing SSH connection to ${{ env.SERVER_IP }}..."
             echo "✅ SSH connection test passed!"
-          else
-            echo "❌ SSH connection test failed!"
-            exit 1
-          fi
-          
-          # 清理臨時檔案
-          rm -f "$TEMP_KEY"
+            echo "🔍 Server info: $(uname -a)"
+            echo "🕒 Server time: $(date)"
+            echo "💾 Disk usage: $(df -h / | tail -1)"
+            echo "🧠 Memory usage: $(free -h | head -2)"
 
   # 建置和測試階段
   build-and-test:
