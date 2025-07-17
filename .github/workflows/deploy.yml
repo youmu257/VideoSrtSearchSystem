@@ -73,6 +73,8 @@ jobs:
             $sshUser = "deployer@$env:SERVER_IP"
             $sshCommand = "echo 'SSH connection successful' && uname -a && date && df -h / | tail -1 && free -h | head -2"
             
+            pwd
+
             Write-Host "🔄 Attempting SSH connection..."
             Write-Host "Debug: SSH Key Path: $tempKey"
             Write-Host "Debug: SSH Port: $sshPort"
