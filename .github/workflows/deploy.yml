@@ -113,7 +113,7 @@ jobs:
           finally {
             # 清理臨時檔案
             if (Test-Path $tempKey) {
-              Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
+              # Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
             }
           }
 
