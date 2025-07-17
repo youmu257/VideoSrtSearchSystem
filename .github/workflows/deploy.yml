@@ -43,6 +43,10 @@ jobs:
     steps:
       - name: 🔗 Test SSH connection
         shell: powershell
+        env:
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
         run: |
           Write-Host "🚀 Testing SSH connection to $env:SERVER_IP..."
           
@@ -59,7 +63,7 @@ jobs:
           
           try {
             # 將私鑰寫入臨時檔案
-            ${{ secrets.SERVER_SSH_KEY }} | Out-File -FilePath $tempKey -Encoding UTF8 -NoNewline
+            $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding UTF8 -NoNewline
 
             # 設定檔案權限（Windows 模式）
             $acl = Get-Acl $tempKey
@@ -82,7 +86,7 @@ jobs:
             $sshArgs = @(
               "-i", $tempKey,
               "-o", "StrictHostKeyChecking=no",
-              "-o", "UserKnownHostsFile=/dev/null",
+              "-o", "UserKnownHostsFile=NUL",
               "-o", "ConnectTimeout=10",
               "-o", "BatchMode=yes",
               "-p", $sshPort,
