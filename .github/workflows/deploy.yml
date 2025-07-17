@@ -45,7 +45,7 @@ jobs:
         shell: wsl-bash {0}
         run: |
           echo "🚀 Testing SSH connection to ${{ env.SERVER_IP }}..."
-          
+          echo "leotest"
           # 創建臨時 SSH 私鑰檔案
           TEMP_KEY=$(mktemp)
           echo "${{ secrets.SERVER_SSH_KEY }}" > "$TEMP_KEY"
