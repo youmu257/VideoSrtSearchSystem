@@ -70,7 +70,7 @@ jobs:
             
             # 測試 SSH 連接
             $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
-            $sshUser = "${{ secrets.SERVER_USERNAME }}@$env:SERVER_IP"
+            $sshUser = "deployer@$env:SERVER_IP"
             $sshCommand = "echo 'SSH connection successful' && uname -a && date && df -h / | tail -1 && free -h | head -2"
             
             Write-Host "🔄 Attempting SSH connection..."
@@ -82,7 +82,7 @@ jobs:
             $sshArgs = @(
               "-i", $tempKey,
               "-o", "StrictHostKeyChecking=no",
-              "-o", "UserKnownHostsFile=NUL",
+              "-o", "UserKnownHostsFile=/dev/null",
               "-o", "ConnectTimeout=10",
               "-o", "BatchMode=yes",
               "-p", $sshPort,
@@ -91,7 +91,7 @@ jobs:
             )
             
             $sshResult = & ssh @sshArgs 2>&1
-            
+            Write-Host "Debug leo1"
             if ($LASTEXITCODE -eq 0) {
               Write-Host "✅ SSH connection test passed!"
               Write-Host "📋 Server information:"
