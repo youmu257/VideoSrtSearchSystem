@@ -42,7 +42,7 @@ jobs:
     environment: production
     steps:
       - name: 🔗 Test SSH connection
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host "🚀 Testing SSH connection to $env:SERVER_IP..."
           
