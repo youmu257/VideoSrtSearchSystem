@@ -119,7 +119,7 @@ jobs:
               $sshUser,
               $sshCommand
             )
-            
+            Write-Host "Debug: 123"
             $sshResult = & ssh @sshArgs 2>&1
             Write-Host "Debug: SSH command executed"
             
