@@ -140,12 +140,14 @@ jobs:
           }
           catch {
             Write-Host "❌ SSH connection test failed with error: $_"
+            Write-Host "🔍 Full error details: $($_.Exception.ToString())"
             exit 1
           }
           finally {
             # 清理臨時檔案
             if (Test-Path $tempKey) {
-              # Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
+              Write-Host "🧹 Cleaning up temporary SSH key file..."
+              Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
             }
           }
 
@@ -269,7 +271,7 @@ jobs:
         path: ${{ env.APP_NAME }}.tar.gz
         retention-days: 1
 
-  # 部署到生產環境
+  # 部署到生產環境 - 使用 Windows self-hosted runner
   deploy-production:
     name: Deploy to Production
     runs-on: self-hosted
@@ -287,15 +289,119 @@ jobs:
         name: docker-image
         
     - name: 🚀 Deploy to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ env.SERVER_IP }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_SSH_PORT || 22 }}
-        source: "${{ env.APP_NAME }}.tar.gz,docker-compose.prod.yml"
-        target: "/home/${{ secrets.SERVER_USERNAME }}/${{ env.APP_NAME }}"
-        timeout: 300s
+      shell: powershell
+      env:
+        SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+        SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
+      run: |
+        Write-Host "🚀 Starting deployment to server..."
+        
+        # 檢查必要工具
+        if (-not (Get-Command scp -ErrorAction SilentlyContinue)) {
+          Write-Host "❌ SCP not found. Please install OpenSSH client."
+          Write-Host "💡 Install with: Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0"
+          exit 1
+        }
+        
+        # 創建臨時 SSH 私鑰檔案
+        $tempDir = [System.IO.Path]::GetTempPath()
+        $tempKey = Join-Path $tempDir "ssh_key_$(Get-Random)"
+        
+        try {
+          Write-Host "🔐 Creating temporary SSH key file..."
+          
+          # 將私鑰寫入臨時檔案
+          $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding ascii -NoNewline
+          
+          # 設定嚴格的檔案權限（Windows 模式）- SSH 要求私鑰只有擁有者可以存取
+          Write-Host "🔐 Setting strict file permissions for SSH key..."
+          
+          # 獲取當前檔案的 ACL
+          $acl = Get-Acl $tempKey
+          
+          # 禁用繼承並移除所有現有權限
+          $acl.SetAccessRuleProtection($true, $false)
+          
+          # 清除所有現有的存取規則
+          $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) }
+          
+          # 只給當前使用者完全控制權限
+          $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+          $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+            $currentUser, 
+            "FullControl", 
+            "Allow"
+          )
+          $acl.SetAccessRule($accessRule)
+          
+          # 套用新的權限設定
+          Set-Acl -Path $tempKey -AclObject $acl
+          
+          Write-Host "🔑 File permissions set for user: $currentUser"
+          
+          # 驗證檔案權限
+          $newAcl = Get-Acl $tempKey
+          Write-Host "📋 File permissions:"
+          $newAcl.Access | ForEach-Object {
+            Write-Host "  - $($_.IdentityReference): $($_.FileSystemRights)"
+          }
+          
+          # 使用 icacls 設定更嚴格的權限
+          $path = $tempKey
+          icacls $path /inheritance:r
+          icacls $path /grant:r "$($env:USERNAME):R"
+          
+          # 複製檔案到伺服器
+          $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
+          $sshUser = "$env:SERVER_USERNAME@$env:SERVER_IP"
+          $targetPath = "/home/$env:SERVER_USERNAME/$env:APP_NAME/"
+          
+          Write-Host "📤 Copying files to server..."
+          Write-Host "Debug: SSH Key Path: $tempKey"
+          Write-Host "Debug: SSH Port: $sshPort"
+          Write-Host "Debug: SSH User: $sshUser"
+          Write-Host "Debug: Target Path: $targetPath"
+          
+          # 使用陣列形式傳遞參數給 SCP
+          $scpArgs = @(
+            "-i", $tempKey,
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "UserKnownHostsFile=NULL",
+            "-o", "ConnectTimeout=10",
+            "-P", $sshPort,
+            "$env:APP_NAME.tar.gz",
+            "docker-compose.prod.yml",
+            "$sshUser`:$targetPath"
+          )
+          
+          Write-Host "🔄 Executing SCP command..."
+          $scpResult = & scp @scpArgs 2>&1
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Files copied successfully"
+            Write-Host "📋 SCP output:"
+            Write-Host $scpResult
+          } else {
+            Write-Host "❌ Failed to copy files to server"
+            Write-Host "🔍 Error details:"
+            Write-Host "Exit code: $LASTEXITCODE"
+            Write-Host $scpResult
+            exit 1
+          }
+        }
+        catch {
+          Write-Host "❌ Deployment failed with error: $_"
+          Write-Host "🔍 Full error details: $($_.Exception.ToString())"
+          exit 1
+        }
+        finally {
+          # 清理臨時檔案
+          if (Test-Path $tempKey) {
+            Write-Host "🧹 Cleaning up temporary SSH key file..."
+            Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
+          }
+        }
         
     - name: 🔄 Execute deployment on server
       uses: appleboy/ssh-action@v1.0.3
