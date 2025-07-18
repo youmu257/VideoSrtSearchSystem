@@ -104,7 +104,7 @@ jobs:
             # 測試 SSH 連接
             $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
             $sshUser = "$env:SERVER_USERNAME@$env:SERVER_IP"
-            $sshCommand = "echo 'SSH connection successful' && uname -a && date && df -h / | tail -1 && free -h | head -2"
+            $sshCommand = "echo 'SSH connection successful' && uname -a && date | head -2"
 
             Write-Host "🔄 Attempting SSH connection..."
             Write-Host "Debug: SSH Key Path: $tempKey"
@@ -306,10 +306,11 @@ jobs:
         
         # 創建臨時 SSH 私鑰檔案
         $tempDir = [System.IO.Path]::GetTempPath()
-        $tempKey = Join-Path $tempDir "ssh_key_$(Get-Random)"
+        $tempKey = Join-Path $tempDir "ssh_deploy_key_$(Get-Random).pem"
         
         try {
           Write-Host "🔐 Creating temporary SSH key file..."
+          Write-Host "Debug: Temp key path: $tempKey"
           
           # 將私鑰寫入臨時檔案
           $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding ascii -NoNewline
@@ -348,9 +349,8 @@ jobs:
           }
           
           # 使用 icacls 設定更嚴格的權限
-          $path = $tempKey
-          icacls $path /inheritance:r
-          icacls $path /grant:r "$($env:USERNAME):R"
+          Write-Host "🔐 Setting additional permissions with icacls..."
+          & icacls $tempKey /inheritance:r /grant:r "$($env:USERNAME):R" | Out-Null
           
           # 複製檔案到伺服器
           $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
@@ -396,10 +396,50 @@ jobs:
           exit 1
         }
         finally {
-          # 清理臨時檔案
+          # 強制清理臨時檔案
           if (Test-Path $tempKey) {
             Write-Host "🧹 Cleaning up temporary SSH key file..."
-            Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
+            try {
+              # 移除唯讀屬性
+              $fileInfo = Get-Item $tempKey -Force
+              if ($fileInfo.IsReadOnly) {
+                $fileInfo.IsReadOnly = $false
+                Write-Host "📝 Removed read-only attribute from key file"
+              }
+              
+              # 重新設定權限為完全控制，以便刪除
+              $acl = Get-Acl $tempKey
+              $acl.SetAccessRuleProtection($false, $false)
+              $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+              $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+                $currentUser, 
+                "FullControl", 
+                "Allow"
+              )
+              $acl.SetAccessRule($accessRule)
+              Set-Acl -Path $tempKey -AclObject $acl
+              
+              # 使用 icacls 重新設定權限
+              & icacls $tempKey /reset | Out-Null
+              
+              # 嘗試刪除檔案
+              Remove-Item $tempKey -Force -ErrorAction Stop
+              Write-Host "✅ Temporary SSH key file cleaned up successfully"
+            }
+            catch {
+              Write-Host "⚠️ Warning: Could not delete temporary key file: $_"
+              Write-Host "🔍 File path: $tempKey"
+              Write-Host "💡 The file may need to be manually cleaned up"
+              
+              # 嘗試用 cmd 刪除
+              try {
+                & cmd /c "del /f /q `"$tempKey`"" | Out-Null
+                Write-Host "✅ File deleted using cmd"
+              }
+              catch {
+                Write-Host "⚠️ Final cleanup attempt failed: $_"
+              }
+            }
           }
         }
         
