@@ -280,8 +280,84 @@ jobs:
     environment: production
     
     steps:
+    - name: 🧹 Pre-cleanup workspace
+      shell: powershell
+      run: |
+        Write-Host "🧹 Pre-cleaning workspace..."
+        
+        # 清理可能殘留的 SSH 私鑰檔案
+        $tempDir = [System.IO.Path]::GetTempPath()
+        $keyFiles = Get-ChildItem -Path $tempDir -Filter "ssh_*key*" -ErrorAction SilentlyContinue
+        
+        if ($keyFiles) {
+          Write-Host "🔍 Found residual SSH key files in temp directory:"
+          foreach ($file in $keyFiles) {
+            Write-Host "  - $($file.FullName)"
+            try {
+              # 移除檔案屬性限制
+              $file.IsReadOnly = $false
+              
+              # 重新設定權限
+              $acl = Get-Acl $file.FullName
+              $acl.SetAccessRuleProtection($false, $false)
+              $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+              $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($currentUser, "FullControl", "Allow")
+              $acl.SetAccessRule($accessRule)
+              Set-Acl -Path $file.FullName -AclObject $acl
+              
+              # 使用 icacls 重置權限
+              & icacls $file.FullName /reset | Out-Null
+              
+              # 刪除檔案
+              Remove-Item $file.FullName -Force -ErrorAction Stop
+              Write-Host "  ✅ Removed: $($file.Name)"
+            }
+            catch {
+              Write-Host "  ⚠️ Could not remove: $($file.Name) - $_"
+              # 嘗試用 cmd 強制刪除
+              try {
+                & cmd /c "del /f /q `"$($file.FullName)`"" | Out-Null
+                Write-Host "  ✅ Force removed with cmd: $($file.Name)"
+              }
+              catch {
+                Write-Host "  ❌ Final removal failed: $($file.Name)"
+              }
+            }
+          }
+        }
+        
+        # 清理工作目錄中可能殘留的 key 檔案
+        $workspaceKeyFiles = Get-ChildItem -Path "." -Filter "*.key" -Recurse -ErrorAction SilentlyContinue
+        if ($workspaceKeyFiles) {
+          Write-Host "🔍 Found residual key files in workspace:"
+          foreach ($file in $workspaceKeyFiles) {
+            Write-Host "  - $($file.FullName)"
+            try {
+              $file.IsReadOnly = $false
+              & icacls $file.FullName /reset | Out-Null
+              Remove-Item $file.FullName -Force -ErrorAction Stop
+              Write-Host "  ✅ Removed: $($file.FullName)"
+            }
+            catch {
+              Write-Host "  ⚠️ Could not remove: $($file.FullName) - $_"
+              try {
+                & cmd /c "del /f /q `"$($file.FullName)`"" | Out-Null
+                Write-Host "  ✅ Force removed with cmd: $($file.FullName)"
+              }
+              catch {
+                Write-Host "  ❌ Final removal failed: $($file.FullName)"
+              }
+            }
+          }
+        }
+        
+        Write-Host "✅ Pre-cleanup completed"
+        
     - name: 🛎️ Checkout code
       uses: actions/checkout@v4
+      with:
+        clean: true
+        fetch-depth: 0
       
     - name: 📥 Download Docker image
       uses: actions/download-artifact@v4
