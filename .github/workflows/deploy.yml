@@ -359,10 +359,10 @@ jobs:
         clean: true
         fetch-depth: 0
       
-    - name: 📥 Download Docker image
-      uses: actions/download-artifact@v4
-      with:
-        name: docker-image
+    # - name: 📥 Download Docker image
+    #   uses: actions/download-artifact@v4
+    #   with:
+    #     name: docker-image
         
     - name: 🚀 Deploy to server
       shell: powershell
