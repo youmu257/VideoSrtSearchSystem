@@ -57,19 +57,26 @@ jobs:
             exit 1
           }
           
-          # 創建臨時 SSH 私鑰檔案
-          $tempDir = [System.IO.Path]::GetTempPath()
-          $tempKey = Join-Path $tempDir "ssh_key_$(Get-Random)"
+          # 創建 SSH 私鑰檔案在 runner 路徑下
+          $runnerPath = $env:GITHUB_WORKSPACE
+          if (-not $runnerPath) {
+            $runnerPath = Get-Location
+          }
+          $sshKeyPath = Join-Path $runnerPath "ssh_connection_key_$(Get-Random).pem"
           
           try {
-            # 將私鑰寫入臨時檔案
-            $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding ascii -NoNewline
+            Write-Host "🔐 Creating SSH key file in runner path..."
+            Write-Host "Debug: Runner path: $runnerPath"
+            Write-Host "Debug: SSH Key path: $sshKeyPath"
+            
+            # 將私鑰寫入檔案
+            $env:SERVER_SSH_KEY | Out-File -FilePath $sshKeyPath -Encoding ascii -NoNewline
 
             # 設定嚴格的檔案權限（Windows 模式）- SSH 要求私鑰只有擁有者可以存取
             Write-Host "🔐 Setting strict file permissions for SSH key..."
             
             # 獲取當前檔案的 ACL
-            $acl = Get-Acl $tempKey
+            $acl = Get-Acl $sshKeyPath
             
             # 禁用繼承並移除所有現有權限
             $acl.SetAccessRuleProtection($true, $false)
@@ -87,19 +94,19 @@ jobs:
             $acl.SetAccessRule($accessRule)
             
             # 套用新的權限設定
-            Set-Acl -Path $tempKey -AclObject $acl
+            Set-Acl -Path $sshKeyPath -AclObject $acl
             
             Write-Host "🔑 File permissions set for user: $currentUser"
             
             # 驗證檔案權限
-            $newAcl = Get-Acl $tempKey
+            $newAcl = Get-Acl $sshKeyPath
             Write-Host "📋 File permissions:"
             $newAcl.Access | ForEach-Object {
               Write-Host "  - $($_.IdentityReference): $($_.FileSystemRights)"
             }
-            $path = $tempKey
-            icacls $path /inheritance:r
-            icacls $path /grant:r "$($env:USERNAME):R"
+            
+            # 使用 icacls 設定更嚴格的權限
+            & icacls $sshKeyPath /inheritance:r /grant:r "$($env:USERNAME):R" | Out-Null
             
             # 測試 SSH 連接
             $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
@@ -107,13 +114,13 @@ jobs:
             $sshCommand = "echo 'SSH connection successful' && uname -a && date | head -2"
 
             Write-Host "🔄 Attempting SSH connection..."
-            Write-Host "Debug: SSH Key Path: $tempKey"
+            Write-Host "Debug: SSH Key Path: $sshKeyPath"
             Write-Host "Debug: SSH Port: $sshPort"
             Write-Host "Debug: SSH User: $sshUser"
             
             # 使用陣列形式傳遞參數給 SSH
             $sshArgs = @(
-              "-i", $tempKey,
+              "-i", $sshKeyPath,
               "-o", "StrictHostKeyChecking=no",
               "-o", "UserKnownHostsFile=NULL",
               "-o", "ConnectTimeout=10",
@@ -122,7 +129,7 @@ jobs:
               $sshUser,
               $sshCommand
             )
-            Write-Host "Debug: 123"
+            
             $sshResult = & ssh @sshArgs 2>&1
             Write-Host "Debug: SSH command executed"
             
@@ -144,10 +151,32 @@ jobs:
             exit 1
           }
           finally {
-            # 清理臨時檔案
-            if (Test-Path $tempKey) {
-              Write-Host "🧹 Cleaning up temporary SSH key file..."
-              Remove-Item $tempKey -Force -ErrorAction SilentlyContinue
+            # 清理 SSH 私鑰檔案
+            if (Test-Path $sshKeyPath) {
+              Write-Host "🧹 Cleaning up SSH key file..."
+              try {
+                # 重新設定權限以便刪除
+                $acl = Get-Acl $sshKeyPath
+                $acl.SetAccessRuleProtection($false, $false)
+                $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+                $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($currentUser, "FullControl", "Allow")
+                $acl.SetAccessRule($accessRule)
+                Set-Acl -Path $sshKeyPath -AclObject $acl
+                & icacls $sshKeyPath /reset | Out-Null
+                
+                Remove-Item $sshKeyPath -Force -ErrorAction Stop
+                Write-Host "✅ SSH key file cleaned up successfully"
+              }
+              catch {
+                Write-Host "⚠️ Warning: Could not delete SSH key file: $_"
+                try {
+                  & cmd /c "del /f /q `"$sshKeyPath`"" | Out-Null
+                  Write-Host "✅ SSH key file deleted using cmd"
+                }
+                catch {
+                  Write-Host "❌ Final cleanup attempt failed: $_"
+                }
+              }
             }
           }
 
@@ -285,12 +314,17 @@ jobs:
       run: |
         Write-Host "🧹 Pre-cleaning workspace..."
         
-        # 清理可能殘留的 SSH 私鑰檔案
-        $tempDir = [System.IO.Path]::GetTempPath()
-        $keyFiles = Get-ChildItem -Path $tempDir -Filter "ssh_*key*" -ErrorAction SilentlyContinue
+        # 獲取 runner 工作路徑
+        $runnerPath = $env:GITHUB_WORKSPACE
+        if (-not $runnerPath) {
+          $runnerPath = Get-Location
+        }
+        Write-Host "🔍 Runner workspace path: $runnerPath"
         
+        # 清理 runner 路徑下可能殘留的 SSH 私鑰檔案
+        $keyFiles = Get-ChildItem -Path $runnerPath -Filter "ssh_*key*.pem" -ErrorAction SilentlyContinue
         if ($keyFiles) {
-          Write-Host "🔍 Found residual SSH key files in temp directory:"
+          Write-Host "🔍 Found residual SSH key files in runner workspace:"
           foreach ($file in $keyFiles) {
             Write-Host "  - $($file.FullName)"
             try {
@@ -326,26 +360,27 @@ jobs:
           }
         }
         
-        # 清理工作目錄中可能殘留的 key 檔案
-        $workspaceKeyFiles = Get-ChildItem -Path "." -Filter "*.key" -Recurse -ErrorAction SilentlyContinue
-        if ($workspaceKeyFiles) {
-          Write-Host "🔍 Found residual key files in workspace:"
-          foreach ($file in $workspaceKeyFiles) {
+        # 清理舊的臨時目錄中的檔案
+        $tempDir = [System.IO.Path]::GetTempPath()
+        $tempKeyFiles = Get-ChildItem -Path $tempDir -Filter "ssh_*key*" -ErrorAction SilentlyContinue
+        if ($tempKeyFiles) {
+          Write-Host "🔍 Found residual SSH key files in temp directory:"
+          foreach ($file in $tempKeyFiles) {
             Write-Host "  - $($file.FullName)"
             try {
               $file.IsReadOnly = $false
               & icacls $file.FullName /reset | Out-Null
               Remove-Item $file.FullName -Force -ErrorAction Stop
-              Write-Host "  ✅ Removed: $($file.FullName)"
+              Write-Host "  ✅ Removed: $($file.Name)"
             }
             catch {
-              Write-Host "  ⚠️ Could not remove: $($file.FullName) - $_"
+              Write-Host "  ⚠️ Could not remove: $($file.Name) - $_"
               try {
                 & cmd /c "del /f /q `"$($file.FullName)`"" | Out-Null
-                Write-Host "  ✅ Force removed with cmd: $($file.FullName)"
+                Write-Host "  ✅ Force removed with cmd: $($file.Name)"
               }
               catch {
-                Write-Host "  ❌ Final removal failed: $($file.FullName)"
+                Write-Host "  ❌ Final removal failed: $($file.Name)"
               }
             }
           }
@@ -359,10 +394,10 @@ jobs:
         clean: true
         fetch-depth: 0
       
-    # - name: 📥 Download Docker image
-    #   uses: actions/download-artifact@v4
-    #   with:
-    #     name: docker-image
+    - name: 📥 Download Docker image
+      uses: actions/download-artifact@v4
+      with:
+        name: docker-image
         
     - name: 🚀 Deploy to server
       shell: powershell
@@ -380,22 +415,26 @@ jobs:
           exit 1
         }
         
-        # 創建臨時 SSH 私鑰檔案
-        $tempDir = [System.IO.Path]::GetTempPath()
-        $tempKey = Join-Path $tempDir "ssh_deploy_key_$(Get-Random).pem"
+        # 在 runner 路徑下創建 SSH 私鑰檔案
+        $runnerPath = $env:GITHUB_WORKSPACE
+        if (-not $runnerPath) {
+          $runnerPath = Get-Location
+        }
+        $sshKeyPath = Join-Path $runnerPath "ssh_deploy_key_$(Get-Random).pem"
         
         try {
-          Write-Host "🔐 Creating temporary SSH key file..."
-          Write-Host "Debug: Temp key path: $tempKey"
+          Write-Host "🔐 Creating SSH key file in runner workspace..."
+          Write-Host "Debug: Runner workspace path: $runnerPath"
+          Write-Host "Debug: SSH key path: $sshKeyPath"
           
-          # 將私鑰寫入臨時檔案
-          $env:SERVER_SSH_KEY | Out-File -FilePath $tempKey -Encoding ascii -NoNewline
+          # 將私鑰寫入檔案
+          $env:SERVER_SSH_KEY | Out-File -FilePath $sshKeyPath -Encoding ascii -NoNewline
           
           # 設定嚴格的檔案權限（Windows 模式）- SSH 要求私鑰只有擁有者可以存取
           Write-Host "🔐 Setting strict file permissions for SSH key..."
           
           # 獲取當前檔案的 ACL
-          $acl = Get-Acl $tempKey
+          $acl = Get-Acl $sshKeyPath
           
           # 禁用繼承並移除所有現有權限
           $acl.SetAccessRuleProtection($true, $false)
@@ -413,12 +452,12 @@ jobs:
           $acl.SetAccessRule($accessRule)
           
           # 套用新的權限設定
-          Set-Acl -Path $tempKey -AclObject $acl
+          Set-Acl -Path $sshKeyPath -AclObject $acl
           
           Write-Host "🔑 File permissions set for user: $currentUser"
           
           # 驗證檔案權限
-          $newAcl = Get-Acl $tempKey
+          $newAcl = Get-Acl $sshKeyPath
           Write-Host "📋 File permissions:"
           $newAcl.Access | ForEach-Object {
             Write-Host "  - $($_.IdentityReference): $($_.FileSystemRights)"
@@ -426,7 +465,7 @@ jobs:
           
           # 使用 icacls 設定更嚴格的權限
           Write-Host "🔐 Setting additional permissions with icacls..."
-          & icacls $tempKey /inheritance:r /grant:r "$($env:USERNAME):R" | Out-Null
+          & icacls $sshKeyPath /inheritance:r /grant:r "$($env:USERNAME):R" | Out-Null
           
           # 複製檔案到伺服器
           $sshPort = if ($env:SERVER_SSH_PORT) { $env:SERVER_SSH_PORT } else { "22" }
@@ -434,14 +473,14 @@ jobs:
           $targetPath = "/home/$env:SERVER_USERNAME/$env:APP_NAME/"
           
           Write-Host "📤 Copying files to server..."
-          Write-Host "Debug: SSH Key Path: $tempKey"
+          Write-Host "Debug: SSH Key Path: $sshKeyPath"
           Write-Host "Debug: SSH Port: $sshPort"
           Write-Host "Debug: SSH User: $sshUser"
           Write-Host "Debug: Target Path: $targetPath"
           
           # 使用陣列形式傳遞參數給 SCP
           $scpArgs = @(
-            "-i", $tempKey,
+            "-i", $sshKeyPath,
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=NULL",
             "-o", "ConnectTimeout=10",
@@ -472,19 +511,19 @@ jobs:
           exit 1
         }
         finally {
-          # 強制清理臨時檔案
-          if (Test-Path $tempKey) {
-            Write-Host "🧹 Cleaning up temporary SSH key file..."
+          # 強制清理 SSH 私鑰檔案
+          if (Test-Path $sshKeyPath) {
+            Write-Host "🧹 Cleaning up SSH key file..."
             try {
               # 移除唯讀屬性
-              $fileInfo = Get-Item $tempKey -Force
+              $fileInfo = Get-Item $sshKeyPath -Force
               if ($fileInfo.IsReadOnly) {
                 $fileInfo.IsReadOnly = $false
                 Write-Host "📝 Removed read-only attribute from key file"
               }
               
               # 重新設定權限為完全控制，以便刪除
-              $acl = Get-Acl $tempKey
+              $acl = Get-Acl $sshKeyPath
               $acl.SetAccessRuleProtection($false, $false)
               $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
               $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
@@ -493,23 +532,23 @@ jobs:
                 "Allow"
               )
               $acl.SetAccessRule($accessRule)
-              Set-Acl -Path $tempKey -AclObject $acl
+              Set-Acl -Path $sshKeyPath -AclObject $acl
               
               # 使用 icacls 重新設定權限
-              & icacls $tempKey /reset | Out-Null
+              & icacls $sshKeyPath /reset | Out-Null
               
               # 嘗試刪除檔案
-              Remove-Item $tempKey -Force -ErrorAction Stop
-              Write-Host "✅ Temporary SSH key file cleaned up successfully"
+              Remove-Item $sshKeyPath -Force -ErrorAction Stop
+              Write-Host "✅ SSH key file cleaned up successfully"
             }
             catch {
-              Write-Host "⚠️ Warning: Could not delete temporary key file: $_"
-              Write-Host "🔍 File path: $tempKey"
+              Write-Host "⚠️ Warning: Could not delete SSH key file: $_"
+              Write-Host "🔍 File path: $sshKeyPath"
               Write-Host "💡 The file may need to be manually cleaned up"
               
               # 嘗試用 cmd 刪除
               try {
-                & cmd /c "del /f /q `"$tempKey`"" | Out-Null
+                & cmd /c "del /f /q `"$sshKeyPath`"" | Out-Null
                 Write-Host "✅ File deleted using cmd"
               }
               catch {
