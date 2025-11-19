@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace Share.DTO.Request.Srt
 {
-    [BindRequired]
     public class SearchSrtRequest : SearchRequest
     {
         /// <summary>

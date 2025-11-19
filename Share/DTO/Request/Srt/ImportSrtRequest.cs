@@ -43,13 +43,13 @@ namespace Share.DTO.Request.Srt
         /// <summary>
         /// 標籤名字
         /// </summary>
-        [JsonPropertyName("name")]
+        [JsonPropertyName("n")]
         public string TagName { get; set; } = string.Empty;
 
         /// <summary>
         /// 標籤類型
         /// </summary>
-        [JsonPropertyName("type")]
+        [JsonPropertyName("t")]
         public LsttType TagType { get; set; } = LsttType.From(0);
     }
 }
