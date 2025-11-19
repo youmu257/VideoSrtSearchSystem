@@ -10,7 +10,7 @@ namespace Share.Migrations
         {
             Create.Table(LiveStreamingTagModel.TableName)
                 .WithColumn(nameof(LiveStreamingTagModel.lst_id)).AsInt32().PrimaryKey().Identity()
-                .WithColumn(nameof(LiveStreamingTagModel.lst_name)).AsString(255).NotNullable()
+                .WithColumn(nameof(LiveStreamingTagModel.lst_name)).AsCustom("VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci").NotNullable()
                 .WithColumn(nameof(LiveStreamingTagModel.lst_type)).AsInt32().NotNullable()
                 .WithColumn(nameof(LiveStreamingTagModel.lst_createtime)).AsDateTime().NotNullable().WithDefault(SystemMethods.CurrentDateTime);
 

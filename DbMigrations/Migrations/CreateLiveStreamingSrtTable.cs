@@ -12,9 +12,9 @@ namespace Share.Migrations
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_id)).AsInt32().PrimaryKey().Identity()
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_ls_id)).AsInt32().NotNullable()
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_num)).AsInt32().NotNullable()
-                .WithColumn(nameof(LiveStreamingSrtModel.lss_start)).AsString(32).NotNullable()
-                .WithColumn(nameof(LiveStreamingSrtModel.lss_end)).AsString(32).NotNullable()
-                .WithColumn(nameof(LiveStreamingSrtModel.lss_text)).AsCustom("VARCHAR(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci").NotNullable()
+                .WithColumn(nameof(LiveStreamingSrtModel.lss_start)).AsCustom("VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci").NotNullable()
+                .WithColumn(nameof(LiveStreamingSrtModel.lss_end)).AsCustom("VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci").NotNullable()
+                .WithColumn(nameof(LiveStreamingSrtModel.lss_text)).AsCustom("VARCHAR(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci").NotNullable()
                 .WithColumn(nameof(LiveStreamingSrtModel.lss_createtime)).AsDateTime().NotNullable().WithDefault(SystemMethods.CurrentDateTime);
 
             // 建立索引以提升查詢效能

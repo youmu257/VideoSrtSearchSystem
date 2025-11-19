@@ -10,7 +10,7 @@ namespace Share.Migrations
         {
             Create.Table(LiveStreamingTagTypeModel.TableName)
                 .WithColumn(nameof(LiveStreamingTagTypeModel.lstt_type)).AsInt32().PrimaryKey()
-                .WithColumn(nameof(LiveStreamingTagTypeModel.lstt_name)).AsString(255).NotNullable()
+                .WithColumn(nameof(LiveStreamingTagTypeModel.lstt_name)).AsCustom("VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci").NotNullable()
                 .WithColumn(nameof(LiveStreamingTagTypeModel.lstt_createtime)).AsDateTime().NotNullable().WithDefault(SystemMethods.CurrentDateTime);
 
             // 建立索引以提升查詢效能
