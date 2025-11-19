@@ -1,104 +1,152 @@
 ﻿@using Share.DTO.Response.Tag
 @{
+    // 標籤搜尋頁面 - 用於搜尋和管理影片標籤
     ViewData["Title"] = "Tag Search";
-    var tagList = ViewData["TagList"] as List<TagResponse>; // 查詢結果
-    var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>; // 標籤列表
-    string keyword = ViewData["Keyword"] as string;
-    uint tagType = ViewData["TagType"] == null ? 0 : (uint)ViewData["TagType"];
-    int page = ViewData["Page"] == null ? 1 : (int)ViewData["Page"];
-    int totalPage = ViewData["TotalPage"] == null ? 1 : (int)ViewData["TotalPage"];
+    
+    // 從 ViewData 取得資料
+    var tagList = ViewData["TagList"] as List<TagResponse>; // 標籤查詢結果列表
+    var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>; // 標籤類型下拉選單選項
+    string keyword = ViewData["Keyword"] as string ?? string.Empty;
+    uint tagType = ViewData["TagType"] as uint? ?? 0;
+    int page = ViewData["Page"] as int? ?? 1;
+    int totalPage = ViewData["TotalPage"] as int? ?? 1;
 }
 
 <div class="container">
+    <!-- 頁面標題與新增按鈕 -->
     <div class="d-flex justify-content-between align-items-center my-4">
-        <h1>Tag Search</h1>
-        <a href="AddTag" class="btn btn-success">新增</a>
+        <h1>標籤搜尋</h1>
+        <a href="AddTag" class="btn btn-success" title="新增標籤" aria-label="新增標籤">新增</a>
     </div>
 
-    <!-- 查詢表單 -->
+    <!-- 搜尋表單區塊 -->
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
-                <!-- 下拉式選單 -->
+                <!-- 標籤類型下拉選單 -->
                 <div class="col-md-4 mb-3">
-                    <label for="typeSelect" class="form-label">類型</label>
-                    <select id="typeSelect" name="type" class="form-select">
+                    <label for="typeSelect" class="form-label">標籤類型</label>
+                    <select id="typeSelect" 
+                            name="type" 
+                            class="form-select"
+                            aria-label="選擇標籤類型">
                         <option value="">請選擇類型</option>
-                        @foreach (var type in tagTypeList)
+                        @if (tagTypeList != null)
                         {
-                            <option value="@type.Id" selected="@(type.Id.Value == tagType ? "selected" : null)">@type.TypeName</option>
+                            @foreach (var type in tagTypeList)
+                            {
+                                <option value="@type.Id" selected="@(type.Id.Value == tagType ? "selected" : null)">
+                                    @type.TypeName
+                                </option>
+                            }
                         }
                     </select>
                 </div>
 
-                <!-- 關鍵字輸入欄位 -->
+                <!-- 關鍵字搜尋輸入框 -->
                 <div class="col-md-6 mb-3">
-                    <label for="keywordInput" class="form-label">關鍵字</label>
-                    <input type="text" id="searchQuery" name="keyword" class="form-control" placeholder="輸入關鍵字" value="@keyword" />
+                    <label for="searchQuery" class="form-label">關鍵字</label>
+                    <input type="text" 
+                           id="searchQuery" 
+                           name="keyword" 
+                           class="form-control" 
+                           placeholder="輸入標籤名稱關鍵字" 
+                           value="@keyword"
+                           aria-label="搜尋關鍵字" />
                 </div>
 
-                <!-- 查詢按鈕 -->
+                <!-- 搜尋按鈕 -->
                 <div class="text-center">
-                    <button class="btn btn-primary" onclick="redirectToSearchResults()">搜尋</button>
+                    <button class="btn btn-primary" 
+                            onclick="redirectToSearchResults()"
+                            aria-label="執行搜尋">
+                        搜尋
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 查詢結果 -->
-    @if (tagList != null && tagList.Count > 0)
+    <!-- 搜尋結果顯示區域 -->
+    @if (tagList != null && tagList.Any())
     {
         <div class="card">
             <div class="card-header bg-light">
-                <h5 class="mb-0">查詢結果</h5>
+                <h5 class="mb-0">查詢結果 (共 @tagList.Count 筆)</h5>
             </div>
             <div class="card-body">
-                <table class="table table-bordered">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Tag Name</th>
-                            <th>Tag Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tag in tagList)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
                             <tr>
-                                <td><strong>@tag.TagName</strong></td>
-                                <td>@tag.TagType</td>
-                                <td>
-                                    <a href="EditTag?id=@tag.Id.Value" class="btn btn-sm btn-primary">編輯</a>
-                                </td>
+                                <th scope="col">標籤名稱</th>
+                                <th scope="col">標籤類型</th>
+                                <th scope="col" style="width: 100px;">操作</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var tag in tagList)
+                            {
+                                <tr>
+                                    <td><strong>@tag.TagName</strong></td>
+                                    <td>@tag.TagType</td>
+                                    <td>
+                                        <a href="EditTag?id=@tag.Id.Value" 
+                                           class="btn btn-sm btn-primary"
+                                           title="編輯標籤"
+                                           aria-label="編輯 @tag.TagName">
+                                            編輯
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     }
     else
     {
         <div class="alert alert-warning" role="alert">
-            沒有找到符合條件的資料。
+            <i class="fa fa-info-circle"></i> 沒有找到符合條件的標籤資料。
         </div>
     }
-    <nav aria-label="Page navigation" class="pagination-wrapper mt-3">
-        <ul class="pagination">
+    <!-- 分頁導航列 -->
+    <nav aria-label="頁面導航" class="pagination-wrapper mt-3">
+        <ul class="pagination justify-content-center">
+            <!-- 上一頁按鈕 -->
             <li class="page-item @(page <= 1 ? "disabled" : "")">
-                <a class="page-link pagination-link" href="#" data-page="@(page - 1)" aria-label="Previous">
+                <a class="page-link pagination-link" 
+                   href="#" 
+                   data-page="@(page - 1)" 
+                   aria-label="上一頁"
+                   title="上一頁">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
+            
+            <!-- 頁碼按鈕 -->
             @for (int i = 1; i <= totalPage; i++)
             {
                 <li class="page-item @(i == page ? "active" : "")">
-                    <a class="page-link pagination-link" href="#" data-page="@i">
+                    <a class="page-link pagination-link" 
+                       href="#" 
+                       data-page="@i"
+                       aria-label="第 @i 頁"
+                       title="跳轉到第 @i 頁">
                         @i
                     </a>
                 </li>
             }
+            
+            <!-- 下一頁按鈕 -->
             <li class="page-item @(page >= totalPage ? "disabled" : "")">
-                <a class="page-link pagination-link" href="#" data-page="@(page + 1)" aria-label="Next">
+                <a class="page-link pagination-link" 
+                   href="#" 
+                   data-page="@(page + 1)" 
+                   aria-label="下一頁"
+                   title="下一頁">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
@@ -106,33 +154,75 @@
     </nav>
 </div>
 <script type="text/javascript">
+    /**
+     * 重導向到標籤搜尋結果頁面
+     * 收集搜尋參數並重導向到搜尋頁面
+     * pageNumber - 頁碼（選填，預設為 1）
+     */
     function redirectToSearchResults(pageNumber) {
-        var query = document.getElementById("searchQuery").value;
-        var tagType = document.getElementById("typeSelect").value;
+        // 取得表單輸入值
+        const query = document.getElementById("searchQuery").value.trim();
+        const tagType = document.getElementById("typeSelect").value;
 
-        var encodedQuery = encodeURIComponent(query);
-
-        // 構建URL參數
-        var params = 'keyword=' + encodedQuery;
+        // 建構 URL 查詢參數
+        const params = new URLSearchParams();
+        
+        // 關鍵字參數（選填）
+        if (query) {
+            params.append('keyword', query);
+        }
+        
+        // 標籤類型參數（選填）
         if (tagType) {
-            params += '&type=' + encodeURIComponent(tagType);
+            params.append('type', tagType);
+        }
+        
+        // 頁碼參數（選填，未提供時使用預設值）
+        if (pageNumber) {
+            params.append('page', pageNumber);
         }
 
-        // 如果提供了頁碼，將其添加到URL，否則使用預設值1
-        var pageParam = pageNumber ? '&page=' + pageNumber : '';
-
-        window.location.href = 'tagSearch?' + params + pageParam;
+        // 重導向到搜尋頁面
+        window.location.href = 'tagSearch?' + params.toString();
     }
 
-    // 為分頁連結添加事件監聽器
+    /**
+     * DOM 載入完成後初始化事件監聽器
+     */
     document.addEventListener('DOMContentLoaded', function() {
-        var paginationLinks = document.querySelectorAll('.pagination-link');
+        // 為所有分頁連結添加點擊事件
+        const paginationLinks = document.querySelectorAll('.pagination-link');
         paginationLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
-                e.preventDefault(); // 阻止預設行為
-                var page = this.getAttribute('data-page');
-                redirectToSearchResults(page);
+                e.preventDefault(); // 阻止預設的錨點跳轉行為
+                
+                const pageNumber = this.getAttribute('data-page');
+                
+                // 確保頁碼有效後才執行重導向
+                if (pageNumber && pageNumber > 0) {
+                    redirectToSearchResults(pageNumber);
+                }
             });
         });
+
+        // 為搜尋輸入框添加 Enter 鍵事件監聽器
+        const searchInput = document.getElementById("searchQuery");
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    redirectToSearchResults();
+                }
+            });
+        }
+        
+        // 為類型選單添加變更事件監聽器（即時搜尋）
+        const typeSelect = document.getElementById("typeSelect");
+        if (typeSelect) {
+            typeSelect.addEventListener('change', function() {
+                // 可選：取消註解以啟用即時搜尋功能
+                // redirectToSearchResults();
+            });
+        }
     });
 </script>

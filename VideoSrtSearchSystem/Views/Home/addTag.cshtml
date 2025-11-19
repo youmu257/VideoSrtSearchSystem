@@ -1,37 +1,126 @@
 ﻿@using Share.DTO.Response.Tag
 @{
+    // 標籤新增頁面 - 用於新增影片標籤
+    // 從 ViewData 取得標籤類型列表
     var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>;
 }
 
-<div class="container">
-    <h2>Add Tag</h2>
+<div class="container mt-4">
+    <!-- 頁面標題 -->
+    <h2 class="mb-4">新增標籤</h2>
 
-    <!-- 下拉式選單 -->
-    <div class="col-md-4 mb-3">
-        <label for="typeSelect" class="form-label">標籤類型</label>
-        <select id="typeSelect" name="type" class="form-select">
-            <option value="">請選擇類型</option>
-            @foreach (var type in tagTypeList)
-            {
-                <option value="@type.Id">@type.TypeName</option>
-            }
-        </select>
+    <!-- 標籤資料表單 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <!-- 標籤類型下拉選單 -->
+                <div class="col-md-6 mb-3">
+                    <label for="typeSelect" class="form-label">標籤類型 <span class="text-danger">*</span></label>
+                    <select id="typeSelect" 
+                            name="type" 
+                            class="form-select"
+                            required
+                            aria-label="選擇標籤類型">
+                        <option value="">請選擇類型</option>
+                        @if (tagTypeList != null && tagTypeList.Any())
+                        {
+                            @foreach (var type in tagTypeList)
+                            {
+                                <option value="@type.Id">@type.TypeName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- 標籤名稱輸入框 -->
+                <div class="col-md-6 mb-3">
+                    <label for="tagName" class="form-label">標籤名稱 <span class="text-danger">*</span></label>
+                    <input type="text" 
+                           id="tagName" 
+                           class="form-control"
+                           placeholder="請輸入標籤名稱"
+                           required
+                           aria-label="標籤名稱">
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>標籤名稱</label>
-        <input type="text" id="tagName" class="form-control">
+    <!-- 操作按鈕區域 -->
+    <div class="d-flex gap-2 mb-4">
+        <button onclick="submitTag()" 
+                class="btn btn-primary"
+                title="新增標籤"
+                aria-label="新增標籤">
+            <i class="fa fa-plus"></i> 新增
+        </button>
+        <a href="tagSearch" 
+           class="btn btn-secondary"
+           title="取消並返回"
+           aria-label="取消並返回">
+            <i class="fa fa-times"></i> 取消
+        </a>
     </div>
-
-    <button onclick="redirectToSearchResults()" class="btn btn-primary">新增</button>
-    <a href="/addTag" class="btn btn-secondary">Cancel</a>
 </div>
 <script type="text/javascript">
-    function redirectToSearchResults(pageNumber) {
-        var tagName = document.getElementById("tagName").value;
-        var tagType = document.getElementById("typeSelect").value;
-
-        // 構建URL參數
-        window.location.href = 'insertTag?type=' + encodeURIComponent(tagType) + "&name=" + encodeURIComponent(tagName);
+    /**
+     * 提交新增標籤表單
+     * 驗證表單資料並提交到後端進行新增
+     */
+    function submitTag() {
+        console.log('submitTag 函數被調用');
+        
+        // 取得表單輸入元素
+        const tagNameElement = document.getElementById("tagName");
+        const tagTypeElement = document.getElementById("typeSelect");
+        
+        if (!tagNameElement || !tagTypeElement) {
+            alert('找不到表單元素');
+            return;
+        }
+        
+        // 取得輸入值並去除前後空白
+        const tagName = tagNameElement.value.trim();
+        const tagType = tagTypeElement.value;
+        
+        console.log('tagName:', tagName, 'tagType:', tagType);
+        
+        // 驗證標籤類型
+        if (!tagType) {
+            alert('請選擇標籤類型');
+            tagTypeElement.focus();
+            return;
+        }
+        
+        // 驗證標籤名稱
+        if (!tagName) {
+            alert('請輸入標籤名稱');
+            tagNameElement.focus();
+            return;
+        }
+        
+        // 建構 URL 查詢參數
+        const params = new URLSearchParams();
+        params.append('type', tagType);
+        params.append('name', tagName);
+        
+        // 提交表單資料
+        window.location.href = 'insertTag?' + params.toString();
     }
+    
+    /**
+     * DOM 載入完成後初始化事件監聽器
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+        // 為標籤名稱輸入框添加 Enter 鍵事件監聽器
+        const tagNameInput = document.getElementById("tagName");
+        if (tagNameInput) {
+            tagNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitTag();
+                }
+            });
+        }
+    });
 </script>

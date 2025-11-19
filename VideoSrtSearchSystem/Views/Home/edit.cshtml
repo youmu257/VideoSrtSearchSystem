@@ -1,145 +1,310 @@
 ﻿@using Share.DTO.Response.Video
 @{
-    var Video = ViewData.ContainsKey("Video") ? ViewData["Video"] as GetOneVideoInfoResponse : new GetOneVideoInfoResponse();
+    // 影片編輯頁面 - 用於編輯影片資訊和標籤
+    // 從 ViewData 取得影片資訊，若不存在則建立新實例
+    var Video = ViewData.ContainsKey("Video") 
+        ? ViewData["Video"] as GetOneVideoInfoResponse 
+        : new GetOneVideoInfoResponse();
 }
 
-<div class="container">
-    <h2>Edit Video</h2>
-    <div class="form-group">
-        <label asp-for="@Video.VideoGuid">ID</label>
-        <input id="videoGuid" value="@Video.VideoGuid" class="form-control" readonly />
-    </div>
+<div class="container mt-4">
+    <!-- 頁面標題 -->
+    <h2 class="mb-4">編輯影片資訊</h2>
+    
+    <!-- 影片基本資訊表單 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- 影片 GUID (唯讀) -->
+            <div class="form-group mb-3">
+                <label for="videoGuid" class="form-label">影片 ID</label>
+                <input id="videoGuid" 
+                       value="@Video.VideoGuid" 
+                       class="form-control" 
+                       readonly 
+                       aria-label="影片 ID" />
+            </div>
 
-    <div class="form-group">
-        <label asp-for="@Video.VideoTitle">Title</label>
-        <input type="text" id="videoTitle" class="form-control" value="@Video.VideoTitle">
-    </div>
+            <!-- 影片標題 (可編輯) -->
+            <div class="form-group mb-3">
+                <label for="videoTitle" class="form-label">影片標題</label>
+                <input type="text" 
+                       id="videoTitle" 
+                       class="form-control" 
+                       value="@Video.VideoTitle"
+                       placeholder="請輸入影片標題"
+                       aria-label="影片標題">
+            </div>
 
-    <div class="form-group">
-        <label asp-for="@Video.VideoUrl">URL</label>
-        <input asp-for="@Video.VideoUrl" class="form-control" readonly />
+            <!-- 影片 URL (唯讀) -->
+            <div class="form-group mb-3">
+                <label for="videoUrl" class="form-label">YouTube 影片 URL</label>
+                <input id="videoUrl"
+                       asp-for="@Video.VideoUrl" 
+                       class="form-control" 
+                       readonly 
+                       aria-label="YouTube 影片 URL" />
+            </div>
+        </div>
     </div>
-    @if (Video.TagList != null && Video.TagList.Count > 0)
-    {
-        <div class="card">
-            <div class="card-body">
-                <table class="table table-bordered">
+    <!-- 影片標籤管理區域 -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">影片標籤管理</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>Tag Name</th>
-                            <th>Tag Type</th>
+                            <th scope="col" style="width: 40%;">標籤名稱</th>
+                            <th scope="col" style="width: 40%;">標籤類型</th>
+                            <th scope="col" style="width: 20%;">操作</th>
                         </tr>
                     </thead>
                     <tbody id="tagTableBody">
-                        @foreach (var tag in Video.TagList)
+                        @if (Video.TagList != null && Video.TagList.Any())
                         {
-                            <tr>
-                                <td>
-                                    <input type="hidden" id="tagId" value="@tag.Id" />
-                                    <input type="text" id="tagName" class="form-control" value="@tag.TagName" readonly>
-                                </td>
-                                <td>
-                                    <select id="typeSelect" name="type" class="form-select">
-                                        <option value="">請選擇類型</option>
-                                        @foreach (var type in Video.TagTypeList)
-                                        {
-                                            <option value="@type.Id" selected="@(type.Id.Value == tag.TagType ? "selected" : null)" readonly>@type.TypeName</option>
-                                        }
-                                    </select>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)">刪除</button>
-                                </td>
-                            </tr>
+                            @foreach (var tag in Video.TagList)
+                            {
+                                <tr>
+                                    <td>
+                                        <!-- 隱藏欄位：標籤 ID -->
+                                        <input type="hidden" class="tagId" value="@tag.Id" />
+                                        <input type="text" 
+                                               class="tagName form-control" 
+                                               value="@tag.TagName" 
+                                               readonly
+                                               aria-label="標籤名稱">
+                                    </td>
+                                    <td>
+                                        <select class="typeSelect form-select" 
+                                                name="type"
+                                                aria-label="標籤類型">
+                                            <option value="">請選擇類型</option>
+                                            @foreach (var type in Video.TagTypeList)
+                                            {
+                                                <option value="@type.Id" 
+                                                        selected="@(type.Id.Value == tag.TagType ? "selected" : null)">
+                                                    @type.TypeName
+                                                </option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button type="button" 
+                                                class="btn btn-danger btn-sm" 
+                                                onclick="deleteRow(this)"
+                                                title="刪除標籤"
+                                                aria-label="刪除標籤">
+                                            刪除
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
                         }
                     </tbody>
                 </table>
-                <button class="btn btn-success" onclick="addRow()">新增</button>
             </div>
+            <button class="btn btn-success" 
+                    onclick="addRow()"
+                    title="新增標籤"
+                    aria-label="新增標籤">
+                <i class="fa fa-plus"></i> 新增標籤
+            </button>
         </div>
-    }
-    <button class="btn btn-primary" onclick="save()">儲存</button>
-    <a href="/home" class="btn btn-secondary">Cancel</a>
+    </div>
+    <!-- 操作按鈕區域 -->
+    <div class="d-flex gap-2 mb-4">
+        <button class="btn btn-primary" 
+                onclick="save()"
+                title="儲存變更"
+                aria-label="儲存變更">
+            <i class="fa fa-save"></i> 儲存
+        </button>
+        <a href="/home" 
+           class="btn btn-secondary"
+           title="取消編輯"
+           aria-label="取消編輯">
+            <i class="fa fa-times"></i> 取消
+        </a>
+    </div>
 </div>
 <script type="text/javascript">
+    /**
+     * 新增標籤列
+     * 在標籤表格中動態新增一行用於輸入新標籤
+     */
     function addRow() {
-        // 獲取 tbody 元素
-        var tbody = document.getElementById("tagTableBody");
+        console.log('addRow 函數被調用');
+        // 取得表格主體元素
+        const tbody = document.getElementById("tagTableBody");
+        if (!tbody) {
+            console.error('找不到標籤表格主體元素');
+            alert('找不到標籤表格主體元素');
+            return;
+        }
 
-        // 創建新的一行
-        var newRow = document.createElement("tr");
+        // 建立新的表格列
+        const newRow = document.createElement("tr");
 
-        // 創建第一列 (Tag Name)
-        var tagNameCell = document.createElement("td");
-        var tagNameInput = document.createElement("input");
+        // 第一欄：標籤名稱輸入欄位
+        const tagNameCell = document.createElement("td");
+        const tagNameInput = document.createElement("input");
         tagNameInput.type = "text";
-        tagNameInput.id = "tagName";
-        tagNameInput.className = "form-control";
+        tagNameInput.className = "tagName form-control";
+        tagNameInput.placeholder = "請輸入標籤名稱";
+        tagNameInput.setAttribute('aria-label', '標籤名稱');
         tagNameCell.appendChild(tagNameInput);
 
-        // 創建第二列 (Tag Type)
-        var tagTypeCell = document.createElement("td");
-        var tagTypeSelect = document.createElement("select");
-        tagTypeSelect.id = "typeSelect";
+        // 第二欄：標籤類型下拉選單
+        const tagTypeCell = document.createElement("td");
+        const tagTypeSelect = document.createElement("select");
+        tagTypeSelect.className = "typeSelect form-select";
         tagTypeSelect.name = "type";
-        tagTypeSelect.className = "form-select";
+        tagTypeSelect.setAttribute('aria-label', '標籤類型');
 
-        // 添加選項
-        var defaultOption = document.createElement("option");
+        // 新增預設選項
+        const defaultOption = document.createElement("option");
         defaultOption.value = "";
         defaultOption.textContent = "請選擇類型";
         tagTypeSelect.appendChild(defaultOption);
-        @foreach (var type in Video.TagTypeList)
+        
+        // 動態新增標籤類型選項
+        @if (Video.TagTypeList != null && Video.TagTypeList.Any())
         {
-            <text>
-                var option = document.createElement("option");
-                option.value = "@type.Id";
-                option.textContent = @Html.Raw(Json.Serialize(type.TypeName)); // 確保中文正確顯示
-                tagTypeSelect.appendChild(option);
-            </text>
+            @foreach (var type in Video.TagTypeList)
+            {
+                <text>
+                var option@(type.Id) = document.createElement("option");
+                option@(type.Id).value = "@type.Id";
+                option@(type.Id).textContent = "@type.TypeName";
+                tagTypeSelect.appendChild(option@(type.Id));
+                </text>
+            }
         }
 
         tagTypeCell.appendChild(tagTypeSelect);
 
-        // 將兩列添加到新行
+        // 第三欄：刪除按鈕
+        const actionCell = document.createElement("td");
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "btn btn-danger btn-sm";
+        deleteButton.textContent = "刪除";
+        deleteButton.onclick = function() { deleteRow(this); };
+        deleteButton.setAttribute('title', '刪除標籤');
+        deleteButton.setAttribute('aria-label', '刪除標籤');
+        actionCell.appendChild(deleteButton);
+
+        // 將所有欄位加入新列
         newRow.appendChild(tagNameCell);
         newRow.appendChild(tagTypeCell);
+        newRow.appendChild(actionCell);
 
-        // 將新行添加到 tbody
+        // 將新列加入表格
         tbody.appendChild(newRow);
+        
+        // 自動聚焦到新增的標籤名稱輸入框
+        tagNameInput.focus();
     }
+    /**
+     * 刪除標籤列
+     * 從表格中移除指定的標籤列
+     * button - 刪除按鈕的 DOM 元素
+     */
     function deleteRow(button) {
-        // 獲取要刪除的行
-        var row = button.closest('tr');
-        // 從表格中移除該行
-        row.parentNode.removeChild(row);
-    }
-    function save() {
-        var guid = document.getElementById("videoGuid").value;
-        var title = document.getElementById("videoTitle").value;
-        var tags = [];
-        var rows = document.querySelectorAll("tbody tr");
-        rows.forEach(function (row) {
-            var tagIdElement = row.querySelector("input[id='tagId']");
-            var tagId = tagIdElement == null ? 0 : tagIdElement.value;
-            var tagName = row.querySelector("input[id='tagName']").value;
-            var tagType = row.querySelector("select[id='typeSelect']").value;
-
-            tags.push({
-                id: parseInt(tagId),
-                name: tagName,
-                type: parseInt(tagType),
-            });
-        });
-
-        // var encodedQuery = encodeURIComponent(query);
-
-        // 構建URL參數
-        var params = 'guid=' + encodeURIComponent(guid) + '&title=' + encodeURIComponent(title);
-        if (tags.length > 0)
-        {
-            params += '&tagJson=' + encodeURIComponent(JSON.stringify(tags));
+        // 取得要刪除的列
+        const row = button.closest('tr');
+        if (!row) {
+            console.error('找不到要刪除的列');
+            return;
         }
-        window.location.href = 'editVideo?' + params;
+        
+        // 確認是否刪除
+        if (confirm('確定要刪除此標籤嗎？')) {
+            // 從表格中移除該列
+            row.parentNode.removeChild(row);
+        }
+    }
+    
+    /**
+     * 儲存影片資訊
+     * 收集表單資料並提交到後端進行更新
+     */
+    function save() {
+        console.log('save 函數被調用');
+        // 取得影片基本資訊
+        const guidElement = document.getElementById("videoGuid");
+        const titleElement = document.getElementById("videoTitle");
+        
+        console.log('guidElement:', guidElement);
+        console.log('titleElement:', titleElement);
+        
+        if (!guidElement || !titleElement) {
+            alert('找不到表單元素');
+            return;
+        }
+        
+        const guid = guidElement.value.trim();
+        const title = titleElement.value.trim();
+        
+        console.log('guid:', guid, 'title:', title);
+        
+        // 驗證必填欄位
+        if (!guid) {
+            alert('影片 ID 不可為空');
+            return;
+        }
+        
+        if (!title) {
+            alert('影片標題不可為空');
+            document.getElementById("videoTitle").focus();
+            return;
+        }
+        
+        // 收集所有標籤資料
+        const tags = [];
+        const rows = document.querySelectorAll("#tagTableBody tr");
+        
+        // 使用 for...of 迴圈以便能正確中斷執行
+        for (const row of rows) {
+            // 取得標籤 ID（新增的標籤沒有 ID）
+            const tagIdElement = row.querySelector(".tagId");
+            const tagId = tagIdElement ? tagIdElement.value : 0;
+            
+            // 取得標籤名稱和類型
+            const tagNameElement = row.querySelector(".tagName");
+            const tagTypeElement = row.querySelector(".typeSelect");
+            
+            if (tagNameElement && tagTypeElement) {
+                const tagName = tagNameElement.value.trim();
+                const tagType = tagTypeElement.value;
+                
+                // 驗證標籤資料完整性
+                if (tagName && tagType) {
+                    tags.push({
+                        id: parseInt(tagId) || 0,
+                        name: tagName,
+                        type: parseInt(tagType),
+                    });
+                } else if (tagName || tagType) {
+                    // 若只填寫部分資料則提示錯誤並中斷儲存
+                    alert('請完整填寫標籤名稱和類型');
+                    return;
+                }
+            }
+        }
+
+        // 建構 URL 查詢參數
+        const params = new URLSearchParams();
+        params.append('guid', guid);
+        params.append('title', title);
+        
+        if (tags.length > 0) {
+            params.append('tagJson', JSON.stringify(tags));
+        }
+        
+        // 提交表單資料
+        window.location.href = 'editVideo?' + params.toString();
     }
 </script>

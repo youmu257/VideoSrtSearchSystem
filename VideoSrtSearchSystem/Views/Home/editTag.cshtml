@@ -1,40 +1,147 @@
 ﻿@using Share.DTO.Response.Tag
 @using Share.Models.LiveStraming
 @{
+    // 標籤編輯頁面 - 用於編輯現有標籤資訊
+    // 從 ViewData 取得標籤類型列表和當前標籤資料
     var tagTypeList = ViewData["TagTypeList"] as List<TagTypeResponse>;
     var tagData = ViewData["TagData"] as LiveStreamingTagModel;
 }
 
-<div class="container">
-    <h2>Add Tag</h2>
-    <input type="hidden" id="tagId" name="tagId" value="@tagData.lst_id.Value" />
-    <!-- 下拉式選單 -->
-    <div class="col-md-4 mb-3">
-        <label for="typeSelect" class="form-label">標籤類型</label>
-        <select id="typeSelect" name="type" class="form-select">
-            <option value="">請選擇類型</option>
-            @foreach (var type in tagTypeList)
-            {
-                <option value="@type.Id" selected="@(type.Id.Value == tagData.lst_type.Value ? "selected" : null)">@type.TypeName</option>
-            }
-        </select>
+<div class="container mt-4">
+    <!-- 頁面標題 -->
+    <h2 class="mb-4">編輯標籤</h2>
+
+    <!-- 標籤資料表單 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- 隱藏欄位：標籤 ID -->
+            <input type="hidden" 
+                   id="tagId" 
+                   name="tagId" 
+                   value="@tagData?.lst_id.Value" />
+            
+            <div class="row">
+                <!-- 標籤類型下拉選單 -->
+                <div class="col-md-6 mb-3">
+                    <label for="typeSelect" class="form-label">標籤類型 <span class="text-danger">*</span></label>
+                    <select id="typeSelect" 
+                            name="type" 
+                            class="form-select"
+                            required
+                            aria-label="選擇標籤類型">
+                        <option value="">請選擇類型</option>
+                        @if (tagTypeList != null && tagTypeList.Any())
+                        {
+                            @foreach (var type in tagTypeList)
+                            {
+                                <option value="@type.Id" 
+                                        selected="@(type.Id.Value == tagData?.lst_type.Value ? "selected" : null)">
+                                    @type.TypeName
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- 標籤名稱輸入框 -->
+                <div class="col-md-6 mb-3">
+                    <label for="tagName" class="form-label">標籤名稱 <span class="text-danger">*</span></label>
+                    <input type="text" 
+                           id="tagName" 
+                           class="form-control" 
+                           value="@tagData?.lst_name"
+                           placeholder="請輸入標籤名稱"
+                           required
+                           aria-label="標籤名稱">
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>標籤名稱</label>
-        <input type="text" id="tagName" class="form-control" value="@tagData.lst_name">
+    <!-- 操作按鈕區域 -->
+    <div class="d-flex gap-2 mb-4">
+        <button onclick="updateTag()" 
+                class="btn btn-primary"
+                title="儲存變更"
+                aria-label="儲存變更">
+            <i class="fa fa-save"></i> 儲存
+        </button>
+        <a href="tagSearch" 
+           class="btn btn-secondary"
+           title="取消編輯"
+           aria-label="取消編輯">
+            <i class="fa fa-times"></i> 取消
+        </a>
     </div>
-
-    <button onclick="redirectToSearchResults()" class="btn btn-primary">儲存</button>
-    <a href="/editTag" class="btn btn-secondary">Cancel</a>
 </div>
 <script type="text/javascript">
-    function redirectToSearchResults(pageNumber) {
-        var tagName = document.getElementById("tagName").value;
-        var tagType = document.getElementById("typeSelect").value;
-        var tagId = document.getElementById("tagId").value;
-
-        // 構建URL參數
-        window.location.href = 'updateTag?id=' + tagId + '&type=' + encodeURIComponent(tagType) + "&name=" + encodeURIComponent(tagName);
+    /**
+     * 更新標籤資訊
+     * 驗證表單資料並提交到後端進行更新
+     */
+    function updateTag() {
+        console.log('updateTag 函數被調用');
+        
+        // 取得表單輸入元素
+        const tagIdElement = document.getElementById("tagId");
+        const tagNameElement = document.getElementById("tagName");
+        const tagTypeElement = document.getElementById("typeSelect");
+        
+        if (!tagIdElement || !tagNameElement || !tagTypeElement) {
+            alert('找不到表單元素');
+            return;
+        }
+        
+        // 取得輸入值並去除前後空白
+        const tagId = tagIdElement.value;
+        const tagName = tagNameElement.value.trim();
+        const tagType = tagTypeElement.value;
+        
+        console.log('tagId:', tagId, 'tagName:', tagName, 'tagType:', tagType);
+        
+        // 驗證標籤 ID
+        if (!tagId) {
+            alert('標籤 ID 不可為空');
+            return;
+        }
+        
+        // 驗證標籤類型
+        if (!tagType) {
+            alert('請選擇標籤類型');
+            tagTypeElement.focus();
+            return;
+        }
+        
+        // 驗證標籤名稱
+        if (!tagName) {
+            alert('請輸入標籤名稱');
+            tagNameElement.focus();
+            return;
+        }
+        
+        // 建構 URL 查詢參數
+        const params = new URLSearchParams();
+        params.append('id', tagId);
+        params.append('type', tagType);
+        params.append('name', tagName);
+        
+        // 提交表單資料
+        window.location.href = 'updateTag?' + params.toString();
     }
+    
+    /**
+     * DOM 載入完成後初始化事件監聽器
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+        // 為標籤名稱輸入框添加 Enter 鍵事件監聽器
+        const tagNameInput = document.getElementById("tagName");
+        if (tagNameInput) {
+            tagNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    updateTag();
+                }
+            });
+        }
+    });
 </script>
